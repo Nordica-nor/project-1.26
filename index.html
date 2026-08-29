@@ -526,6 +526,23 @@ html, body {
     transform: translate(0, 0);
 }
 
+
+.airport-marker.special-base {
+    position: relative;
+}
+
+.airport-marker.special-base::after {
+    content: "";
+    position: absolute;
+    width: 4px;
+    height: 4px;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    border-radius: 50%;
+    background: #d62828;
+}
+
 </style>
 </head>
 
@@ -1134,7 +1151,7 @@ Object.entries(airports).forEach(([code, airport]) => {
 
     const icon = L.divIcon({
         className: "",
-        html: `<div class="airport-marker" id="marker-${code}"></div>`,
+        html: `<div class="airport-marker ${["OSL","BGO","SVG","TOS","LPA"].includes(code) ? "special-base" : ""}" id="marker-${code}"></div>`,
         iconSize: [11, 11],
         iconAnchor: [5.5, 5.5]
     });
