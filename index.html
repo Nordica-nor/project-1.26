@@ -462,6 +462,70 @@ html, body {
     white-space: nowrap;
     font-size: 13px !important;
 }
+
+.flight-type-info {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 14px;
+    height: 14px;
+    margin-left: 7px;
+    border: 1px solid rgba(244,247,250,0.45);
+    border-radius: 50%;
+    color: rgba(244,247,250,0.65);
+    font-size: 9px;
+    font-weight: 700;
+    line-height: 1;
+    cursor: help;
+    vertical-align: middle;
+}
+
+.flight-type-info:hover {
+    color: rgba(244,247,250,0.95);
+    border-color: rgba(244,247,250,0.75);
+}
+
+.flight-type-info .flight-type-tooltip {
+    position: absolute;
+    bottom: calc(100% + 9px);
+    left: auto;
+    right: -6px;
+    width: 270px;
+    padding: 9px 11px;
+    border-radius: 8px;
+    background: rgba(8,22,39,0.98);
+    border: 1px solid rgba(255,255,255,0.12);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.38);
+    color: #dbe5ee;
+    font-size: 11px;
+    font-weight: 400;
+    line-height: 1.45;
+    text-align: left;
+    opacity: 0;
+    visibility: hidden;
+    transform: translate(-50%, 3px);
+    transition: opacity 0.12s ease, transform 0.12s ease, visibility 0.12s ease;
+    pointer-events: none;
+    z-index: 2000;
+}
+
+.flight-type-info .flight-type-tooltip::after {
+    content: "";
+    position: absolute;
+    top: 100%;
+    right: 2px;
+    left: auto;
+    border: 5px solid transparent;
+    border-top-color: rgba(8,22,39,0.98);
+}
+
+.flight-type-info:hover .flight-type-tooltip {
+    opacity: 1;
+    visibility: visible;
+    transform: translate(0, 0);
+}
+
 </style>
 </head>
 
@@ -504,18 +568,27 @@ html, body {
    ========================================================== */
 
 const airports = {
+    ORB: {
+        icao: "ESOE", name: "Örebro", city: "Örebro", country: "Sweden",
+        lat: 59.2237, lng: 15.0380, hub: false,
+        info: "International destination."
+    },
+
 
     OSL: {
+        role: "MAIN CREW BASE",
         icao: "ENGM", name: "Oslo Gardermoen", city: "Oslo", country: "Norway",
         lat: 60.1939, lng: 11.1004, hub: "primary",
         info: "Primary hub of the virtual airline."
     },
     BGO: {
+        role: "CREW BASE",
         icao: "ENBR", name: "Bergen Flesland", city: "Bergen", country: "Norway",
         lat: 60.2934, lng: 5.2181, hub: "secondary",
         info: "Secondary hub."
     },
     SVG: {
+        role: "CREW BASE",
         icao: "ENZV", name: "Stavanger Sola", city: "Stavanger", country: "Norway",
         lat: 58.8767, lng: 5.6378, hub: "secondary",
         info: "Secondary hub."
@@ -523,6 +596,7 @@ const airports = {
     TRD: {
         icao: "ENVA", name: "Trondheim Værnes", city: "Trondheim", country: "Norway",
         lat: 63.4578, lng: 10.9240, hub: false,
+        role: "FOCUS AIRPORT",
         info: "Destination airport."
     },
     CPH: {
@@ -533,11 +607,13 @@ const airports = {
     TOS: {
         icao: "ENTC", name: "Tromsø Langnes", city: "Tromsø", country: "Norway",
         lat: 69.6833, lng: 18.9189, hub: false,
+        role: "CREW BASE",
         info: "Destination airport in Northern Norway."
     },
     LPA: {
         icao: "GCLP", name: "Gran Canaria (Las Palmas)", city: "Las Palmas", country: "Spain",
         lat: 27.9319, lng: -15.3866, hub: false,
+        role: "SEASONAL BASE",
         info: "International leisure destination."
     },
     LCA: {
@@ -863,7 +939,7 @@ const routes = [
     { from: "BGO", to: "AGP" , flightTime: "03:40", aircraftType: "Boeing 737-8 MAX" , season: "Year-round" , frequency: "Sat" },
     { from: "BGO", to: "CPH" , flightTime: "01:20", aircraftType: "Bombardier CRJ" , season: "Year-round" , frequency: "Daily" },
     { from: "BGO", to: "DUS" , flightTime: "01:50", aircraftType: "Bombardier CRJ" , season: "Year-round" , frequency: "Tue · Thu · Sat" },
-    { from: "BGO", to: "LPA" , flightTime: "05:35", seasonal: true, seasonStart: "October", seasonEnd: "April", aircraftType: "Boeing 737-8 MAX" , season: "October - April" , frequency: "Sat" },
+    { from: "BGO", to: "LPA" , flightTime: "05:35", seasonal: true, seasonStart: "October", seasonEnd: "April", aircraftType: "Boeing 737-8 MAX" , season: "October - April" , frequency: "Sat" , flightType: "Combined flight" },
     { from: "BGO", to: "ARN" , flightTime: "01:20", aircraftType: "Bombardier CRJ" , season: "Year-round" , frequency: "Mon · Wed · Fri · Sun" },
     { from: "BGO", to: "TOS" , flightTime: "02:00", aircraftType: "Bombardier CRJ" , season: "Year-round" , frequency: "Mon · Wed · Fri · Sun" },
 
@@ -874,7 +950,7 @@ const routes = [
     { from: "SVG", to: "ARN" , flightTime: "01:25", aircraftType: "Bombardier CRJ" , season: "Year-round" , frequency: "Mon · Wed · Fri · Sun" },
     { from: "SVG", to: "CPH" , flightTime: "01:15", aircraftType: "Bombardier CRJ" , season: "Year-round" , frequency: "Mon · Tue · Wed · Thu · Fri · Sun" },
     { from: "SVG", to: "NCL" , flightTime: "01:20", aircraftType: "Bombardier CRJ" , season: "Year-round" , frequency: "Tue · Thu · Sun" },
-    { from: "SVG", to: "LPA" , flightTime: "05:25", seasonal: true, seasonStart: "October", seasonEnd: "April", aircraftType: "Boeing 737-8 MAX" , season: "October - April" , frequency: "Sat" },
+    { from: "SVG", to: "LPA" , flightTime: "05:25", seasonal: true, seasonStart: "October", seasonEnd: "April", aircraftType: "Boeing 737-8 MAX" , season: "October - April" , frequency: "Sat" , flightType: "Combined flight" },
     { from: "SVG", to: "TRD" , flightTime: "01:10", aircraftType: "Bombardier CRJ" , season: "Year-round" , frequency: "Daily" },
 
     // Other routes
@@ -888,6 +964,18 @@ const routes = [
     { from: "TOS", to: "BOO" , flightTime: "00:50", aircraftType: "Bombardier CRJ" , season: "Year-round" , frequency: "Daily" },
     { from: "BOO", to: "TRD" , flightTime: "01:00", aircraftType: "Bombardier CRJ" , season: "Year-round" , frequency: "Daily" },
     { from: "TOS", to: "TRD" , flightTime: "02:10", aircraftType: "Bombardier CRJ" , season: "Year-round" , frequency: "Daily" }
+,
+    { from: "TRD", to: "LPA", flightTime: "06:00", aircraftType: "Boeing 737-8 MAX", season: "October - April", frequency: "Sun" , flightType: "Combined flight" }
+,
+    { from: "LPA", to: "ORB", flightTime: "05:45", aircraftType: "Boeing 737-8 MAX", season: "October - April", frequency: "Fri" , flightType: "Combined flight" }
+,
+    { from: "LPA", to: "TRF", flightTime: "05:35", aircraftType: "Boeing 737-8 MAX", season: "October - April", frequency: "Sat" , flightType: "Combined flight" }
+,
+    { from: "TFS", to: "GOT", flightTime: "05:30", aircraftType: "Boeing 737-8 MAX", season: "October - April", frequency: "Sat" , flightType: "Combined flight" }
+,
+    { from: "LPA", to: "AES", flightTime: "05:40", aircraftType: "Boeing 737-8 MAX", season: "October - April", frequency: "Thu", flightType: "Combined flight" }
+,
+    { from: "BGO", to: "TFS", flightTime: "05:25", aircraftType: "Boeing 737-8 MAX", season: "October - April", frequency: "Sun", flightType: "Combined flight" }
 ];
 
 
@@ -1241,7 +1329,7 @@ function selectRoute(originCode, destinationCode) {
 
     document.getElementById("airport-code").innerHTML =
         isNordicAirlink
-            ? `<span class="operator-label">Operated by <strong>Nordic Airlink</strong><span class="operator-info">i<span class="operator-tooltip">Routes operated by Nordic Airlink primarily serve commuters and may offer a reduced onboard serving</span></span></span>`
+            ? `<span class="operator-label">Operated by <strong>Nordic Airlink</strong><span class="operator-info">?<span class="operator-tooltip">Routes operated by Nordic Airlink primarily serve commuters and may offer a reduced onboard serving</span></span></span>`
             : (route.charter ? "Charter route" : "");
 
     let routeHTML = `
@@ -1286,6 +1374,17 @@ function selectRoute(originCode, destinationCode) {
             <div class="route-detail-row">
                 <span>Frequency</span>
                 <strong class="frequency-value">${route.frequency || "—"}</strong>
+            </div>
+            <div class="route-detail-row">
+                <span>Flight type</span>
+                <strong>${
+                    route.flightType ||
+                    (route.charter ? "Charter flight" : "Scheduled flight")
+                }${
+                    route.flightType === "Combined flight"
+                        ? ` <span class="flight-type-info">?<span class="flight-type-tooltip">This flight is a combined scheduled and chartered flight, where some of the seats are pre-reserved by charter agencies we partner with.</span></span>`
+                        : ""
+                }</strong>
             </div>
         </div>`;
 
@@ -1413,10 +1512,8 @@ function selectAirport(code) {
 
     const badges = [];
 
-    if (airport.hub === "primary") {
-        badges.push(`<span class="tag hub">PRIMARY HUB</span>`);
-    } else if (airport.hub === "secondary") {
-        badges.push(`<span class="tag base">SECONDARY HUB</span>`);
+    if (airport.role) {
+        badges.push(`<span class="tag ${airport.role === "MAIN CREW BASE" ? "hub" : "base"}">${airport.role}</span>`);
     }
 
     let panelHTML = badges.join("");
