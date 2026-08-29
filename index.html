@@ -1,0 +1,1071 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nordica</title>
+
+<link rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      crossorigin=""/>
+
+<style>
+:root {
+    --water: #071426;
+    --land: #17304d;
+    --land-border: #2b4968;
+    --navy: #0b2a4a;
+    --route: #1f5d8f;
+    --route-active: #6ca6d6;
+    --airport: #f4f7fa;
+    --hub: #ffffff;
+    --text: #f4f7fa;
+    --muted: #9eafc0;
+    --panel: rgba(8, 22, 39, 0.96);
+}
+
+html, body {
+    margin: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: var(--water);
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+#map {
+    width: 100%;
+    height: 100%;
+    min-height: 600px;
+    background: #061525;
+}
+
+/* Airport information is shown only in the top-left panel. */
+
+/* Information panel */
+#info-panel {
+    display: none;
+    position: absolute;
+    z-index: 1000;
+    top: 20px;
+    left: 20px;
+    width: 330px;
+    max-width: calc(100vw - 40px);
+    background: var(--panel);
+    color: var(--text);
+    border: 1px solid rgba(255,255,255,0.10);
+    border-radius: 14px;
+    box-shadow: 0 12px 35px rgba(0,0,0,0.40);
+    backdrop-filter: blur(8px);
+    overflow: hidden;
+}
+
+#panel-header {
+    padding: 18px 20px 15px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+
+.eyebrow {
+    color: #6ca6d6;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    margin-bottom: 5px;
+}
+
+#airport-name {
+    margin: 0;
+    font-size: 24px;
+}
+
+#airport-code {
+    margin-top: 4px;
+    color: var(--muted);
+    font-size: 13px;
+}
+
+#panel-content {
+    padding: 16px 20px 20px;
+    max-height: 55vh;
+    overflow-y: auto;
+}
+
+.empty {
+    color: var(--muted);
+    font-size: 14px;
+    line-height: 1.55;
+}
+
+.badge {
+    display: inline-block;
+    padding: 5px 9px;
+    border-radius: 999px;
+    background: rgba(255,255,255,0.10);
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: .8px;
+    margin-bottom: 5px;
+}
+
+.section {
+    margin-top: 18px;
+    margin-bottom: 8px;
+    color: var(--muted);
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+}
+
+.destination {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+
+.destination:last-child {
+    border-bottom: none;
+}
+
+.destination-code {
+    font-weight: 700;
+    font-size: 14px;
+}
+
+.destination-name {
+    color: var(--text);
+    font-size: 12px;
+    margin-right: 6px;
+}
+
+.route-info {
+    color: #6ca6d6;
+    font-size: 11px;
+}
+
+#reset {
+    width: 100%;
+    margin-top: 17px;
+    padding: 10px;
+    border: 0;
+    border-radius: 8px;
+    background: #17304d;
+    color: white;
+    cursor: pointer;
+    font-weight: 700;
+}
+
+#reset:hover {
+    background: #234a70;
+}
+
+/* Airport markers */
+.airport-marker {
+    width: 11px;
+    height: 11px;
+    border-radius: 50%;
+    background: var(--airport);
+    border: 2px solid #17304d;
+    box-shadow: 0 0 0 2px rgba(255,255,255,0.20),
+                0 2px 7px rgba(0,0,0,0.5);
+    box-sizing: border-box;
+}
+
+.airport-marker.hub {
+    width: 15px;
+    height: 15px;
+    border: 3px solid white;
+    box-shadow: 0 0 0 4px rgba(255,255,255,0.12),
+                0 2px 9px rgba(0,0,0,0.55);
+}
+
+.airport-marker.selected {
+    opacity: 1;
+}
+
+.airport-marker.fade-out {
+    opacity: 0.18;
+}
+
+/* Airport labels */
+.airport-label {
+    color: white;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    font-size: 11px;
+    font-weight: 700;
+    text-shadow:
+        0 1px 3px #071426,
+        1px 0 3px #071426,
+        -1px 0 3px #071426;
+}
+
+.airport-label::before {
+    display: none;
+}
+
+/* Hover popup */
+.leaflet-popup-content-wrapper,
+.leaflet-popup-tip {
+    background: #0b1d31;
+    color: white;
+}
+
+.leaflet-popup-content {
+    margin: 12px 14px;
+}
+
+.popup-title {
+    font-size: 16px;
+    font-weight: 700;
+}
+
+.popup-code {
+    color: #6ca6d6;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    margin-top: 2px;
+}
+
+.popup-info {
+    color: #9eafc0;
+    font-size: 12px;
+    line-height: 1.45;
+    margin-top: 8px;
+}
+
+.leaflet-control-attribution {
+    background: rgba(7,20,38,.80) !important;
+    color: #8fa2b6 !important;
+}
+
+.leaflet-control-attribution a {
+    color: #9fc6e5 !important;
+}
+
+@media (max-width: 600px) {
+    #info-panel {
+        top: 10px;
+        left: 10px;
+        width: 285px;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<div id="map"></div>
+
+<div id="info-panel">
+    <div id="panel-header">
+        <div class="eyebrow">Nordica</div>
+        <h1 id="airport-name">Network Map</h1>
+        <div id="airport-code">OSL / ENGM · Primary Hub</div>
+    </div>
+
+    <div id="panel-content">
+        <div class="empty">
+            Hover over an airport to see information about the station.
+            <br><br>
+            Click an airport to highlight all routes to and from that airport.
+        </div>
+    </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        crossorigin=""></script>
+
+<script>
+
+/* ==========================================================
+   AIRPORT DATA
+   ========================================================== */
+
+const airports = {
+
+    OSL: {
+        icao: "ENGM", name: "Oslo Gardermoen", city: "Oslo", country: "Norway",
+        lat: 60.1939, lng: 11.1004, hub: "primary",
+        info: "Primary hub of the virtual airline."
+    },
+    BGO: {
+        icao: "ENBR", name: "Bergen Flesland", city: "Bergen", country: "Norway",
+        lat: 60.2934, lng: 5.2181, hub: "secondary",
+        info: "Secondary hub."
+    },
+    SVG: {
+        icao: "ENZV", name: "Stavanger Sola", city: "Stavanger", country: "Norway",
+        lat: 58.8767, lng: 5.6378, hub: "secondary",
+        info: "Secondary hub."
+    },
+    TRD: {
+        icao: "ENVA", name: "Trondheim Værnes", city: "Trondheim", country: "Norway",
+        lat: 63.4578, lng: 10.9240, hub: false,
+        info: "Destination airport."
+    },
+    CPH: {
+        icao: "EKCH", name: "Copenhagen Airport", city: "Copenhagen", country: "Denmark",
+        lat: 55.6180, lng: 12.6508, hub: false,
+        info: "International destination."
+    },
+    TOS: {
+        icao: "ENTC", name: "Tromsø Langnes", city: "Tromsø", country: "Norway",
+        lat: 69.6833, lng: 18.9189, hub: false,
+        info: "Destination airport in Northern Norway."
+    },
+    LPA: {
+        icao: "GCLP", name: "Gran Canaria Airport", city: "Las Palmas", country: "Spain",
+        lat: 27.9319, lng: -15.3866, hub: false,
+        info: "International leisure destination."
+    },
+    LCA: {
+        icao: "LCLK", name: "Larnaca International", city: "Larnaca",
+        country: "Cyprus", lat: 34.8751, lng: 33.6249, hub: false,
+        info: "Charter destination."
+    },
+    HRG: {
+        icao: "HEGN", name: "Hurghada International", city: "Hurghada",
+        country: "Egypt", lat: 27.1783, lng: 33.7994, hub: false,
+        info: "Charter destination."
+    },
+    HEL: {
+        icao: "EFHK", name: "Helsinki Airport", city: "Helsinki",
+        country: "Finland", lat: 60.3172, lng: 24.9633, hub: false,
+        info: "International destination."
+    },
+    AAR: {
+        icao: "EKAH", name: "Aarhus Airport", city: "Aarhus",
+        country: "Denmark", lat: 56.3000, lng: 10.6190, hub: false,
+        info: "International destination."
+    },
+    GOT: {
+        icao: "ESGG", name: "Gothenburg Landvetter Airport", city: "Gothenburg",
+        country: "Sweden", lat: 57.6628, lng: 12.2798, hub: false,
+        info: "International destination."
+    },
+    LHR: {
+        icao: "EGLL", name: "London Heathrow", city: "London", country: "United Kingdom",
+        lat: 51.4700, lng: -0.4543, hub: false,
+        info: "International destination."
+    },
+    CDG: {
+        icao: "LFPG", name: "Paris Charles de Gaulle", city: "Paris", country: "France",
+        lat: 49.0097, lng: 2.5479, hub: false,
+        info: "International destination."
+    },
+    ALC: {
+        icao: "LEAL", name: "Alicante–Elche", city: "Alicante", country: "Spain",
+        lat: 38.2822, lng: -0.5582, hub: false,
+        info: "International leisure destination."
+    },
+    AGP: {
+        icao: "LEMG", name: "Málaga Airport", city: "Málaga", country: "Spain",
+        lat: 36.6749, lng: -4.4991, hub: false,
+        info: "International leisure destination."
+    },
+    KRS: {
+        icao: "ENCN", name: "Kristiansand Kjevik", city: "Kristiansand", country: "Norway",
+        lat: 58.2042, lng: 8.0854, hub: false,
+        info: "Destination airport."
+    },
+    AES: {
+        icao: "ENAL", name: "Ålesund Vigra", city: "Ålesund", country: "Norway",
+        lat: 62.5625, lng: 6.1197, hub: false,
+        info: "Destination airport."
+    },
+    KSU: {
+        icao: "ENKB", name: "Kristiansund Kvernberget", city: "Kristiansund", country: "Norway",
+        lat: 63.1118, lng: 7.8245, hub: false,
+        info: "Destination airport."
+    },
+    BOO: {
+        icao: "ENBO", name: "Bodø Airport", city: "Bodø", country: "Norway",
+        lat: 67.2692, lng: 14.3653, hub: false,
+        info: "Destination airport."
+    },
+    BER: {
+        icao: "EDDB", name: "Berlin Brandenburg", city: "Berlin", country: "Germany",
+        lat: 52.3667, lng: 13.5033, hub: false,
+        info: "International destination."
+    },
+    ARN: {
+        icao: "ESSA", name: "Stockholm Arlanda", city: "Stockholm", country: "Sweden",
+        lat: 59.6519, lng: 17.9186, hub: false,
+        info: "International destination."
+    },
+    MAN: {
+        icao: "EGCC", name: "Manchester Airport", city: "Manchester", country: "United Kingdom",
+        lat: 53.3537, lng: -2.2750, hub: false,
+        info: "International destination."
+    },
+    FNC: {
+        icao: "LPMA", name: "Madeira Airport", city: "Funchal", country: "Portugal",
+        lat: 32.6979, lng: -16.7745, hub: false,
+        info: "International leisure destination."
+    },
+    FCO: {
+        icao: "LIRF", name: "Rome Fiumicino", city: "Rome", country: "Italy",
+        lat: 41.8003, lng: 12.2389, hub: false,
+        info: "International destination."
+    },
+    HAM: {
+        icao: "EDDH", name: "Hamburg Airport", city: "Hamburg", country: "Germany",
+        lat: 53.6304, lng: 9.9882, hub: false,
+        info: "International destination."
+    },
+    TRF: {
+        icao: "ENTO", name: "Sandefjord Airport, Torp", city: "Sandefjord", country: "Norway",
+        lat: 59.1867, lng: 10.2586, hub: false,
+        info: "Destination airport."
+    },
+    DUS: {
+        icao: "EDDL", name: "Düsseldorf Airport", city: "Düsseldorf", country: "Germany",
+        lat: 51.2895, lng: 6.7668, hub: false,
+        info: "International destination."
+    },
+    ABZ: {
+        icao: "EGPD", name: "Aberdeen Airport", city: "Aberdeen", country: "United Kingdom",
+        lat: 57.2019, lng: -2.1978, hub: false,
+        info: "International destination."
+    },
+    NCL: {
+        icao: "EGNT", name: "Newcastle Airport", city: "Newcastle", country: "United Kingdom",
+        lat: 55.0375, lng: -1.6917, hub: false,
+        info: "International destination."
+    },
+    AYT: {
+        icao: "LTAI", name: "Antalya Airport", city: "Antalya", country: "Turkey",
+        lat: 36.8987, lng: 30.8005, hub: false,
+        info: "International leisure destination."
+    },
+    BCN: {
+        icao: "LEBL", name: "Barcelona–El Prat", city: "Barcelona", country: "Spain",
+        lat: 41.2974, lng: 2.0833, hub: false,
+        info: "International destination."
+    },
+    DUB: {
+        icao: "EIDW", name: "Dublin Airport", city: "Dublin", country: "Ireland",
+        lat: 53.4264, lng: -6.2499, hub: false,
+        info: "International destination."
+    },
+    EDI: {
+        icao: "EGPH", name: "Edinburgh Airport", city: "Edinburgh", country: "United Kingdom",
+        lat: 55.9500, lng: -3.3725, hub: false,
+        info: "International destination."
+    },
+    MAD: {
+        icao: "LEMD", name: "Adolfo Suárez Madrid–Barajas", city: "Madrid", country: "Spain",
+        lat: 40.4983, lng: -3.5676, hub: false,
+        info: "International destination."
+    },
+    MXP: {
+        icao: "LIMC", name: "Milan Malpensa", city: "Milan", country: "Italy",
+        lat: 45.6306, lng: 8.7281, hub: false,
+        info: "International destination."
+    },
+    NCE: {
+        icao: "LFMN", name: "Nice Côte d'Azur", city: "Nice", country: "France",
+        lat: 43.6653, lng: 7.2150, hub: false,
+        info: "International destination."
+    },
+    POZ: {
+        icao: "EPPO", name: "Poznań–Ławica", city: "Poznań", country: "Poland",
+        lat: 52.4210, lng: 16.8263, hub: false,
+        info: "International destination."
+    },
+    TFS: {
+        icao: "GCTS", name: "Tenerife South", city: "Tenerife", country: "Spain",
+        lat: 28.0445, lng: -16.5725, hub: false,
+        info: "International leisure destination."
+    },
+    VIE: {
+        icao: "LOWW", name: "Vienna International", city: "Vienna", country: "Austria",
+        lat: 48.1103, lng: 16.5697, hub: false,
+        info: "International destination."
+    },
+    ACE: {
+        icao: "GCRR", name: "Lanzarote Airport", city: "Lanzarote", country: "Spain",
+        lat: 28.9455, lng: -13.6052, hub: false,
+        info: "Charter destination."
+    },
+    WAW: {
+        icao: "EPWA", name: "Warsaw Chopin", city: "Warsaw", country: "Poland",
+        lat: 52.1657, lng: 20.9671, hub: false,
+        info: "International destination."
+    },
+    KKN: {
+        icao: "ENKR", name: "Kirkenes Airport, Høybuktmoen", city: "Kirkenes", country: "Norway",
+        lat: 69.7258, lng: 29.8913, hub: false,
+        info: "Destination airport in Northern Norway."
+    },
+    ALF: {
+        icao: "ENAT", name: "Alta Airport", city: "Alta", country: "Norway",
+        lat: 69.9761, lng: 23.3717, hub: false,
+        info: "Destination airport in Northern Norway."
+    }
+};
+
+
+/* ==========================================================
+   ROUTES
+   ========================================================== */
+
+const routes = [
+    // OSL
+    { from: "OSL", to: "BGO" },
+    { from: "OSL", to: "SVG" },
+    { from: "OSL", to: "TRD" },
+    { from: "OSL", to: "CPH" },
+    { from: "OSL", to: "TOS" },
+    { from: "OSL", to: "LPA" },
+    { from: "OSL", to: "ALC" },
+    { from: "OSL", to: "AGP" },
+    { from: "OSL", to: "LHR" },
+    { from: "OSL", to: "KRS" },
+    { from: "OSL", to: "AES" },
+    { from: "OSL", to: "KSU" },
+    { from: "OSL", to: "BOO" },
+    { from: "OSL", to: "BER" },
+    { from: "OSL", to: "ARN" },
+    { from: "OSL", to: "MAN" },
+    { from: "OSL", to: "FNC" },
+    { from: "OSL", to: "FCO" },
+    { from: "OSL", to: "HAM" },
+    { from: "OSL", to: "CDG" },
+    { from: "OSL", to: "AYT" },
+    { from: "OSL", to: "BCN" },
+    { from: "OSL", to: "DUB" },
+    { from: "OSL", to: "EDI" },
+    { from: "OSL", to: "MAD" },
+    { from: "OSL", to: "MXP" },
+    { from: "OSL", to: "NCE" },
+    { from: "OSL", to: "POZ" },
+    { from: "OSL", to: "TFS" },
+    { from: "OSL", to: "VIE" },
+    { from: "OSL", to: "ACE", charter: true },
+    { from: "OSL", to: "WAW" },
+    { from: "BGO", to: "GOT" },
+    { from: "BGO", to: "EDI" },
+    { from: "OSL", to: "AAR" },
+    { from: "OSL", to: "HEL" },
+    { from: "OSL", to: "LCA", charter: true },
+    { from: "OSL", to: "HRG", charter: true },
+
+    // BGO
+    { from: "BGO", to: "LHR" },
+    { from: "BGO", to: "CDG" },
+    { from: "BGO", to: "ALC" },
+    { from: "BGO", to: "TRD" },
+    { from: "BGO", to: "AES" },
+    { from: "BGO", to: "SVG" },
+    { from: "BGO", to: "TRF" },
+    { from: "BGO", to: "AGP" },
+    { from: "BGO", to: "CPH" },
+    { from: "BGO", to: "DUS" },
+    { from: "BGO", to: "LPA" },
+    { from: "BGO", to: "ARN" },
+    { from: "BGO", to: "TOS" },
+
+    // SVG
+    { from: "SVG", to: "LHR" },
+    { from: "SVG", to: "ABZ" },
+    { from: "SVG", to: "AGP" },
+    { from: "SVG", to: "ARN" },
+    { from: "SVG", to: "CPH" },
+    { from: "SVG", to: "NCL" },
+    { from: "SVG", to: "LPA" },
+    { from: "SVG", to: "TRD" },
+
+    // Other routes
+    { from: "KRS", to: "LHR" },
+    { from: "TRD", to: "ALC" },
+
+    // TOS
+    { from: "TOS", to: "KKN" },
+    { from: "TOS", to: "ALF" },
+    // Ordinary direct routes between TOS, BOO and TRD
+    { from: "TOS", to: "BOO" },
+    { from: "BOO", to: "TRD" },
+    { from: "TOS", to: "TRD" }
+];
+
+
+/* ==========================================================
+   MAP
+   ========================================================== */
+
+const map = L.map("map", {
+    zoomControl: false,
+    minZoom: 2,
+    maxZoom: 10
+}).setView([55, 10], 4);
+
+/*
+   CARTO Dark Matter, label-free basemap.
+   CARTO Dark Matter without labels is used here deliberately:
+   no API key, no vector-style dependency, no MapLibre dependency.
+*/
+L.tileLayer(
+    "https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png?key=cb1_2iwu_1_adb61a81e14a92adac6dcc13",
+    {
+        subdomains: "abcd",
+        maxZoom: 20,
+        minZoom: 0,
+        attribution:
+            '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+    }
+).addTo(map);
+
+L.control.zoom({
+    position: "bottomright"
+}).addTo(map);
+
+/*
+   Clicking the background restores the complete Nordica network.
+*/
+map.on("click", function() {
+    resetMap();
+});
+
+
+/* ==========================================================
+   ROUTE DRAWING
+   ========================================================== */
+
+const routeLayers = [];
+
+routes.forEach(route => {
+
+    const from = airports[route.from];
+    const to = airports[route.to];
+
+    if (!from || !to) return;
+
+    const line = L.polyline(
+        [
+            [from.lat, from.lng],
+            [to.lat, to.lng]
+        ],
+        {
+            color: "#4c78a0",
+            weight: 2,
+            opacity: 0.72,
+            smoothFactor: 1
+        }
+    ).addTo(map);
+
+    line.routeData = route;
+    routeLayers.push(line);
+});
+
+
+/* ==========================================================
+   AIRPORT MARKERS
+   ========================================================== */
+
+const airportMarkers = {};
+
+Object.entries(airports).forEach(([code, airport]) => {
+
+    const markerClass =
+        airport.hub
+        ? "airport-marker hub"
+        : "airport-marker";
+
+    const icon = L.divIcon({
+        className: "",
+        html: `<div class="airport-marker" id="marker-${code}"></div>`,
+        iconSize: [11, 11],
+        iconAnchor: [5.5, 5.5]
+    });
+
+    const marker = L.marker(
+        [airport.lat, airport.lng],
+        {
+            icon: icon,
+            title: `${code} · ${airport.name}`
+        }
+    ).addTo(map);
+
+    airportMarkers[code] = marker;
+
+
+    /* Airport name appears only while hovering over the dot */
+    marker.bindTooltip(
+        `${airport.name} (${code})`,
+        {
+            permanent: false,
+            direction: "top",
+            offset: [0, -8],
+            className: "airport-label",
+            sticky: true
+        }
+    );
+
+    marker.on("mouseover", function() {
+        const markerElement = document.getElementById(`marker-${code}`);
+
+        if (markerElement && markerElement.classList.contains("fade-out")) {
+            this.closeTooltip();
+        }
+    });
+
+    /* Popup is click-only */
+
+
+    marker.on("click", function(e) {
+        L.DomEvent.stopPropagation(e);
+        selectAirport(code);
+    });
+});
+
+
+/* ==========================================================
+   CLICK / NETWORK HIGHLIGHT
+   ========================================================== */
+
+function selectAirport(code) {
+
+    const airport = airports[code];
+
+    document.getElementById("info-panel").style.display = "block";
+
+    document.querySelectorAll(".airport-marker").forEach(el => {
+        el.classList.remove("selected");
+        el.classList.remove("fade-out");
+    });
+
+    const selectedEl = document.getElementById(`marker-${code}`);
+    if (selectedEl) selectedEl.classList.add("selected");
+
+    /*
+       Only direct destinations from the selected airport are shown.
+       There is no special handling for TOS/BOO/TRD anymore:
+       every route is an ordinary direct route.
+    */
+    const connectedRoutes = routes.filter(route =>
+        route.from === code || route.to === code
+    );
+
+    const destinationEntries = connectedRoutes.map(route => {
+
+        const destinationCode =
+            route.from === code ? route.to : route.from;
+
+        const destination = airports[destinationCode];
+
+        return {
+            code: destinationCode,
+            airport: destination,
+            charter: route.charter || false,
+            domestic: destination.country === airport.country
+        };
+    });
+
+    /*
+       Selected airport + its direct destinations stay visible.
+       Every other airport fades.
+    */
+    const visibleAirports = new Set([code]);
+
+    destinationEntries.forEach(entry => {
+        visibleAirports.add(entry.code);
+    });
+
+    Object.keys(airports).forEach(airportCode => {
+
+        const markerEl =
+            document.getElementById(`marker-${airportCode}`);
+
+        if (!markerEl) return;
+
+        if (!visibleAirports.has(airportCode)) {
+            markerEl.classList.add("fade-out");
+
+            if (airportMarkers[airportCode]) {
+                airportMarkers[airportCode].closeTooltip();
+            }
+        }
+    });
+
+    /*
+       Highlight only routes directly connected to the selected airport.
+    */
+    routeLayers.forEach(line => {
+
+        const route = line.routeData;
+
+        const connected =
+            route.from === code ||
+            route.to === code;
+
+        line.setStyle({
+            color: connected
+                ? getComputedStyle(document.documentElement)
+                    .getPropertyValue("--route-active").trim()
+                : getComputedStyle(document.documentElement)
+                    .getPropertyValue("--route").trim(),
+            weight: connected ? 4 : 1,
+            opacity: connected ? 1 : 0.10
+        });
+    });
+
+    /*
+       Top-left airport information panel.
+       Large = airport name + country.
+       Small = IATA / ICAO.
+    */
+    document.getElementById("airport-name").textContent =
+        `${airport.name} · ${airport.country}`;
+
+    document.getElementById("airport-code").textContent =
+        `${code} / ${airport.icao}`;
+
+    const badges = [];
+
+    if (airport.hub === "primary") {
+        badges.push(`<span class="tag hub">PRIMARY HUB</span>`);
+    } else if (airport.hub === "secondary") {
+        badges.push(`<span class="tag base">SECONDARY HUB</span>`);
+    }
+
+    let panelHTML = badges.join("");
+
+    const nordicaPriority = {
+        OSL: 0,
+        BGO: 1,
+        SVG: 2
+    };
+
+    const destinationSort = (a, b) => {
+
+        const aPriority =
+            Object.prototype.hasOwnProperty.call(nordicaPriority, a.code)
+                ? nordicaPriority[a.code]
+                : 99;
+
+        const bPriority =
+            Object.prototype.hasOwnProperty.call(nordicaPriority, b.code)
+                ? nordicaPriority[b.code]
+                : 99;
+
+        if (aPriority !== bPriority) {
+            return aPriority - bPriority;
+        }
+
+        return a.airport.city.localeCompare(b.airport.city);
+    };
+
+    const domestic = destinationEntries
+        .filter(entry => entry.domestic && !entry.charter)
+        .sort(destinationSort);
+
+    const international = destinationEntries
+        .filter(entry => !entry.domestic && !entry.charter)
+        .sort(destinationSort);
+
+    const charter = destinationEntries
+        .filter(entry => entry.charter)
+        .sort(destinationSort);
+
+    /*
+       Domestic destinations first.
+    */
+    if (domestic.length) {
+
+        panelHTML += `
+            <div class="section">
+                Domestic · ${domestic.length}
+            </div>
+        `;
+
+        domestic.forEach(entry => {
+
+            panelHTML += `
+                <div class="destination">
+                    <div>
+                        <span class="destination-name">
+                            ${entry.airport.name}
+                        </span>
+                        <span class="destination-code">
+                            ${entry.code}
+                        </span>
+                    </div>
+
+                    <div class="aircraft">
+                        ${
+                            ((code === "TOS" && entry.code === "TRD") ||
+                             (code === "TRD" && entry.code === "TOS"))
+                                ? "Via Bodø"
+                                : entry.charter
+                                    ? "Charter"
+                                    : "Direct"
+                        }
+                    </div>
+                </div>
+            `;
+        });
+    }
+
+    /*
+       International destinations second.
+    */
+    if (international.length) {
+
+        panelHTML += `
+            <div class="section">
+                International · ${international.length}
+            </div>
+        `;
+
+        international.forEach(entry => {
+
+            panelHTML += `
+                <div class="destination">
+                    <div>
+                        <span class="destination-name">
+                            ${entry.airport.name}
+                        </span>
+                        <span class="destination-code">
+                            ${entry.code}
+                        </span>
+                    </div>
+
+                    <div class="aircraft">
+                        ${
+                            ((code === "TOS" && entry.code === "TRD") ||
+                             (code === "TRD" && entry.code === "TOS"))
+                                ? "Via Bodø"
+                                : entry.charter
+                                    ? "Charter"
+                                    : "Direct"
+                        }
+                    </div>
+                </div>
+            `;
+        });
+    }
+
+    /*
+       Charter destinations are listed separately below
+       international destinations.
+    */
+    if (charter.length) {
+
+        panelHTML += `
+            <div class="section">
+                Charter · ${charter.length}
+            </div>
+        `;
+
+        charter.forEach(entry => {
+
+            panelHTML += `
+                <div class="destination">
+                    <div>
+                        <span class="destination-name">
+                            ${entry.airport.name}
+                        </span>
+                        <span class="destination-code">
+                            ${entry.code}
+                        </span>
+                    </div>
+
+                    <div class="aircraft">
+                        Charter
+                    </div>
+                </div>
+            `;
+        });
+    }
+
+    panelHTML += `
+        <button id="reset-btn" onclick="resetMap()">
+            Show entire network
+        </button>
+    `;
+
+    document.getElementById("panel-content").innerHTML =
+        panelHTML;
+
+    map.panTo(
+        [airport.lat, airport.lng],
+        {
+            animate: true,
+            duration: 0.5
+        }
+    );
+}
+
+/* ==========================================================
+   RESET
+   ========================================================== */
+
+function resetMap() {
+
+    document.getElementById("info-panel").style.display = "none";
+
+    document.querySelectorAll(".airport-marker").forEach(el => {
+        el.classList.remove("selected");
+        el.classList.remove("fade-out");
+    });
+
+    routeLayers.forEach(line => {
+        line.setStyle({
+            color: getComputedStyle(document.documentElement)
+                .getPropertyValue("--route").trim(),
+            weight: 1.5,
+            opacity: 0.45
+        });
+    });
+
+    document.getElementById("airport-name").textContent =
+        "Nordica";
+
+    document.getElementById("airport-code").textContent =
+        "OSL / ENGM · Primary Hub";
+
+    document.getElementById("panel-content").innerHTML = `
+        <div class="empty-state">
+            Hover over an airport to see its name.<br><br>
+            Click an airport to see all destinations served from that airport.
+        </div>
+    `;
+}
+
+/* ==========================================================
+   INITIAL VIEW
+   ========================================================== */
+
+function fitNetwork() {
+
+    const coordinates =
+        Object.values(airports).map(airport => [
+            airport.lat,
+            airport.lng
+        ]);
+
+    if (!coordinates.length) return;
+
+    const bounds = L.latLngBounds(coordinates);
+
+    map.fitBounds(bounds, {
+        padding: [60, 60],
+        maxZoom: 5
+    });
+}
+
+fitNetwork();
+
+window.resetMap = resetMap;
+
+</script>
+</body>
+</html>
