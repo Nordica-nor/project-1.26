@@ -79,15 +79,6 @@ html, body {
     font-size: 24px;
 }
 
-#route-season-label {
-    display: none;
-    margin-top: 3px;
-    margin-bottom: 5px;
-    color: rgba(255,255,255,.52);
-    font-size: 14px;
-    font-weight: 400;
-    letter-spacing: .15px;
-}
 #airport-code {
     margin-top: 4px;
     color: var(--muted);
@@ -478,11 +469,20 @@ rgba(255,255,255,.10);
     cursor: pointer;
     z-index: 20;
 }
-#info-panel.route-no-season #panel-switch {
+#info-panel.route-no-season:not(.route-starts-april) #panel-switch {
+    top: 58px;
+}
+#info-panel.route-starts-april #panel-switch {
     top: 58px;
 }
 #info-panel:not(.route-no-season) #panel-switch {
-    top: 77px;
+    top: 58px;
+}
+#panel-switch.switching {
+    transform: rotate(180deg) scale(.94);
+    background: rgba(255,255,255,.10);
+    border-color: rgba(255,255,255,.34);
+    transition: transform .32s ease, background .18s ease, border-color .18s ease;
 }
 #panel-switch:hover {
     background: transparent;
@@ -758,10 +758,28 @@ rgba(255,255,255,.10);
 
 /* Route Schedule */
 /* Embedded route calendar */
+.route-popup-comments {
+    margin-top: 8px;
+    color: rgba(255,255,255,.52);
+    font-size: 13px;
+    font-weight: 400;
+    line-height: 1.35;
+    text-align: center;
+}
+.route-calendar.schedule-transition-out {
+    opacity: .32;
+    transform: translateX(-7px);
+    transition: opacity .18s ease, transform .18s ease;
+}
+.route-calendar.schedule-transition-in {
+    opacity: 0;
+    transform: translateX(7px);
+    transition: opacity .26s ease, transform .26s ease;
+}
 .route-calendar {
     width: 100%;
     box-sizing: border-box;
-    margin-top: -31px;
+    margin-top: -8px;
     padding-top: 2px;
     position: relative;
 }
@@ -2115,6 +2133,7 @@ rgba(255,255,255,.10);
                 <span>Instagram</span>
             </a>
             <a class="nav-button" href="index.html">Home</a>
+            <a class="nav-button" href="#">Flight search</a>
             <a class="nav-button" href="network.html">Network</a>
             <a class="nav-button" href="fleet.html">Fleet</a>
         </nav>
@@ -2138,7 +2157,6 @@ rgba(255,255,255,.10);
         <button id="panel-close" type="button" aria-label="Close airport information">×</button>
         
         <h1 id="airport-name">Network Map</h1>
-        <div id="route-season-label"></div>
         <div id="airport-code">OSL / ENGM · Primary Hub</div>
         <div id="airport-role" class="airport-role"></div>
 
@@ -2664,24 +2682,53 @@ document.getElementById("panel-switch").addEventListener("click", function(e) {
 
     if (!selectedRouteKey || !scheduleRouteFrom || !scheduleRouteTo) return;
 
+    const switchButton = this;
+    const calendar = document.getElementById("route-calendar");
+
+    if (switchButton.classList.contains("switching")) return;
+
     const newOrigin = scheduleRouteTo;
     const newDestination = scheduleRouteFrom;
     const currentYear = scheduleCalendarYear;
-
-    showRouteCalendarLoading();
     const currentMonth = scheduleCalendarMonth;
 
-    selectRoute(newOrigin, newDestination);
+    switchButton.classList.add("switching");
 
-    // Keep the user on the same calendar month when changing direction.
-    if (!isSeasonalWinterRoute() ||
-        getSeasonalWinterCalendarMonths().some(m =>
-            m.year === currentYear && m.month === currentMonth
-        )) {
-        scheduleCalendarYear = currentYear;
-        scheduleCalendarMonth = currentMonth;
-        renderRouteCalendar();
+    if (calendar) {
+        calendar.classList.remove("schedule-transition-in");
+        calendar.classList.add("schedule-transition-out");
     }
+
+    setTimeout(() => {
+        selectRoute(newOrigin, newDestination);
+
+        // Keep the user on the same calendar month when changing direction.
+        if (!isSeasonalWinterRoute() ||
+            getSeasonalWinterCalendarMonths().some(m =>
+                m.year === currentYear && m.month === currentMonth
+            )) {
+            scheduleCalendarYear = currentYear;
+            scheduleCalendarMonth = currentMonth;
+            renderRouteCalendar();
+        }
+
+        const newCalendar = document.getElementById("route-calendar");
+
+        if (newCalendar) {
+            newCalendar.classList.remove("schedule-transition-out");
+            newCalendar.classList.add("schedule-transition-in");
+
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    newCalendar.classList.remove("schedule-transition-in");
+                });
+            });
+        }
+
+        setTimeout(() => {
+            switchButton.classList.remove("switching");
+        }, 360);
+    }, 300);
 });
 
 
@@ -2990,30 +3037,11 @@ function selectRoute(originCode, destinationCode) {
         });
     });
 
+    const routeOriginName = originCode === "LPA" ? "Gran Canaria" : origin.name;
+    const routeDestinationName = destinationCode === "LPA" ? "Gran Canaria" : destination.name;
+
     document.getElementById("airport-name").innerHTML =
-        `${origin.name} ${originCode} -<br>${destination.name} ${destinationCode}`;
-
-    const routeSeasonLabel = document.getElementById("route-season-label");
-    if (routeSeasonLabel) {
-        if (isSeasonalWinterRoute()) {
-            routeSeasonLabel.textContent = "Operated from October to April";
-            routeSeasonLabel.style.display = "block";
-            document.getElementById("info-panel").classList.remove("route-no-season");
-        } else {
-            const outboundSchedule = getScheduleDirectionData("outbound");
-            const inboundSchedule = getScheduleDirectionData("inbound");
-            const hasAnySchedule = outboundSchedule || inboundSchedule;
-
-            if (!hasAnySchedule) {
-                routeSeasonLabel.textContent = "Starts in April";
-                routeSeasonLabel.style.display = "block";
-            } else {
-                routeSeasonLabel.textContent = "";
-                routeSeasonLabel.style.display = "none";
-            document.getElementById("info-panel").classList.add("route-no-season");
-            }
-        }
-    }
+        `${routeOriginName} ${originCode} -<br>${routeDestinationName} ${destinationCode}`;
 
     // Route pop-ups must not carry over the role/crew-base label
     // from the previously selected airport.
@@ -3028,17 +3056,29 @@ function selectRoute(originCode, destinationCode) {
     const routePair = [originCode, destinationCode].sort().join("-");
     const isNordicAirlink = nordicAirlinkRoutes.has(routePair);
 
-    document.getElementById("airport-code").innerHTML =
-        isNordicAirlink
-            ? `<span class="operator-label">Operated by <strong>Nordic Airlink</strong><span class="operator-info">?<span class="operator-tooltip">Routes operated by Nordic Airlink primarily serve commuters and may offer a reduced onboard serving</span></span></span>`
-            : (route.charter ? "Charter route" : "");
+    const outboundSchedule = getScheduleDirectionData("outbound");
+    const inboundSchedule = getScheduleDirectionData("inbound");
+    const hasAnySchedule = outboundSchedule || inboundSchedule;
+
+    const routeComments = [];
+    if (isNordicAirlink) {
+        routeComments.push(`<span class="operator-label">Operated by <strong>Nordic Airlink</strong><span class="operator-info">?<span class="operator-tooltip">Routes operated by Nordic Airlink primarily serve commuters and may offer a reduced onboard serving</span></span></span>`);
+    }
+
+    if (isSeasonalWinterRoute()) {
+        routeComments.push("Operating from October to April");
+        document.getElementById("info-panel").classList.remove("route-no-season", "route-starts-april");
+    } else if (!hasAnySchedule) {
+        routeComments.push("Starts in April");
+        document.getElementById("info-panel").classList.add("route-no-season", "route-starts-april");
+    } else {
+        document.getElementById("info-panel").classList.remove("route-no-season", "route-starts-april");
+    }
+
+    document.getElementById("airport-code").innerHTML = "";
 
     let routeHTML = `
         <div class="route-calendar" id="route-calendar">
-            <div class="route-calendar-loading" id="route-calendar-loading" aria-hidden="true">
-                <span class="route-calendar-spinner"></span>
-                <span>Updating schedule</span>
-            </div>
             <div class="route-calendar-header">
                 <button class="route-calendar-arrow route-calendar-prev" type="button"
                         onclick="changeRouteCalendarMonth(-1)" aria-label="Previous month">‹</button>
@@ -3049,9 +3089,17 @@ function selectRoute(originCode, destinationCode) {
 
             <div class="route-calendar-grid" id="route-calendar-grid"></div>
         </div>
+
+        <div class="route-popup-comments" id="route-popup-comments"></div>
     `;
 
     document.getElementById("panel-content").innerHTML = routeHTML;
+
+    const routeCommentsEl = document.getElementById("route-popup-comments");
+    if (routeCommentsEl) {
+        routeCommentsEl.innerHTML = routeComments.join("<br>");
+        routeCommentsEl.style.display = routeComments.length ? "block" : "none";
+    }
 
     initialiseRouteCalendar();
     renderRouteCalendar();
@@ -3886,8 +3934,8 @@ function resetMap() {
 
     applyNetworkFilters();
 
-    document.getElementById("airport-name").textContent =
-        "Nordica";
+    const airportDisplayName = code === "LPA" ? "Gran Canaria" : airport.name;
+    document.getElementById("airport-name").textContent = `${airportDisplayName} ${code}`;
 
     document.getElementById("airport-code").textContent =
         "OSL / ENGM · Primary Hub";
