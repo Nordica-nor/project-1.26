@@ -67,7 +67,7 @@ html, body {
 
 .eyebrow {
     color: #6ca6d6;
-    font-size: 11px;
+    font-size: 10px;
     font-weight: 700;
     letter-spacing: 1.5px;
     text-transform: uppercase;
@@ -79,6 +79,15 @@ html, body {
     font-size: 24px;
 }
 
+#route-season-label {
+    display: none;
+    margin-top: 3px;
+    margin-bottom: 5px;
+    color: rgba(255,255,255,.52);
+    font-size: 14px;
+    font-weight: 400;
+    letter-spacing: .15px;
+}
 #airport-code {
     margin-top: 4px;
     color: var(--muted);
@@ -205,7 +214,7 @@ rgba(255,255,255,.10);
 .airport-schedule-route {
     color: var(--text);
     font-size: 16px;
-    line-height: 1.35;
+    line-height: 1.05;
 }
 
 .airport-schedule-time {
@@ -217,7 +226,7 @@ rgba(255,255,255,.10);
 }
 
 .airport-schedule-secondary-time {
-    margin-top: 2px;
+    margin-top: 0;
     color: rgba(255,255,255,.66);
     font-size: 11px !important;
     font-weight: 700;
@@ -380,7 +389,7 @@ rgba(255,255,255,.10);
     font-size: 11px;
     font-weight: 700;
     letter-spacing: 1px;
-    margin-top: 2px;
+    margin-top: 0;
 }
 
 .popup-info {
@@ -452,6 +461,34 @@ rgba(255,255,255,.10);
     position: relative;
 }
 
+#panel-switch {
+    display: none;
+    position: absolute;
+    top: 76px;
+    right: 9px;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    border: none;
+    border-radius: 0;
+    background: transparent;
+    color: rgba(255,255,255,.78);
+    font-size: 25px;
+    line-height: 32px;
+    cursor: pointer;
+    z-index: 20;
+}
+#info-panel.route-no-season #panel-switch {
+    top: 58px;
+}
+#info-panel:not(.route-no-season) #panel-switch {
+    top: 77px;
+}
+#panel-switch:hover {
+    background: transparent;
+    color: #fff;
+}
+
 #panel-close {
     position: absolute;
     top: 10px;
@@ -517,7 +554,7 @@ rgba(255,255,255,.10);
     right: auto;
     transform: translate(-50%, 3px);
     width: 250px;
-    padding: 9px 11px;
+    padding: 2px 4px;
     border-radius: 8px;
     background: rgba(8,22,39,0.98);
     border: 1px solid rgba(255,255,255,0.12);
@@ -559,7 +596,7 @@ rgba(255,255,255,.10);
     top: 94px;
     right: 18px;
     display: flex;
-    gap: 8px;
+    gap: 1px;
     align-items: center;
 }
 
@@ -661,7 +698,7 @@ rgba(255,255,255,.10);
     left: auto;
     right: -6px;
     width: 270px;
-    padding: 9px 11px;
+    padding: 2px 4px;
     border-radius: 8px;
     background: rgba(8,22,39,0.98);
     border: 1px solid rgba(255,255,255,0.12);
@@ -720,6 +757,287 @@ rgba(255,255,255,.10);
 }
 
 /* Route Schedule */
+/* Embedded route calendar */
+.route-calendar {
+    width: 100%;
+    box-sizing: border-box;
+    margin-top: -31px;
+    padding-top: 2px;
+    position: relative;
+}
+
+.route-calendar-loading {
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    margin-bottom: 4px;
+    color: rgba(255,255,255,.52);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: .2px;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-3px);
+    transition: opacity .12s ease, transform .12s ease, visibility .12s ease;
+}
+
+.route-calendar-loading.visible {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.route-calendar-spinner {
+    width: 11px;
+    height: 11px;
+    border: 2px solid rgba(255,255,255,.18);
+    border-top-color: rgba(112,194,241,.95);
+    border-radius: 50%;
+    animation: routeCalendarSpin .65s linear infinite;
+}
+
+@keyframes routeCalendarSpin {
+    to { transform: rotate(360deg); }
+}
+
+.route-calendar-header {
+    display: grid;
+    grid-template-columns: 32px 1fr 32px;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.route-calendar-month {
+    margin: 0;
+    color: #fff;
+    font-size: 17px;
+    font-weight: 600;
+    text-align: center;
+}
+
+.route-calendar-arrow {
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    border: 1px solid rgba(255,255,255,.12);
+    border-radius: 8px;
+    background: rgba(255,255,255,.045);
+    color: rgba(255,255,255,.82);
+    font-size: 20px;
+    line-height: 28px;
+    cursor: pointer;
+    transition: .16s ease;
+}
+
+.route-calendar-arrow:hover {
+    background: rgba(92,158,204,.20);
+    border-color: rgba(130,205,250,.42);
+    color: #fff;
+}
+
+.route-calendar-arrow.hidden {
+    visibility: hidden;
+    pointer-events: none;
+}
+
+.route-calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    grid-template-rows: 28px repeat(6, 42px);
+    border-top: 1px solid rgba(255,255,255,.09);
+    border-left: 1px solid rgba(255,255,255,.09);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.route-calendar-weekday {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(15,20,27,.72);
+    color: rgba(255,255,255,.54);
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: .25px;
+    border-right: 1px solid rgba(255,255,255,.09);
+    border-bottom: 1px solid rgba(255,255,255,.09);
+}
+
+.route-calendar-day {
+    position: relative;
+    display: flex;
+    align-items: flex-start;
+    justify-content: flex-start;
+    padding: 7px 8px;
+    border: 0;
+    border-right: 1px solid rgba(255,255,255,.09);
+    border-bottom: 1px solid rgba(255,255,255,.09);
+    background: rgba(29,37,48,.72);
+    color: rgba(255,255,255,.82);
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 13px;
+    text-align: left;
+    cursor: default;
+    transition: background .14s ease, box-shadow .14s ease;
+}
+
+.route-calendar-day.empty {
+    background: rgba(18,24,32,.42);
+}
+
+.route-calendar-day.has-flights {
+    cursor: pointer;
+    z-index: 1;
+}
+
+.route-calendar-day.has-flights > * {
+    pointer-events: none;
+}
+
+.route-calendar-day.has-flights:hover {
+    z-index: 2;
+    background: rgba(65,116,151,.28);
+    box-shadow: inset 0 0 0 1px rgba(111,192,239,.20);
+}
+
+.route-calendar-day.no-flights {
+    position: relative;
+    background: rgba(18,24,32,.42);
+    color: rgba(255,255,255,.72);
+    opacity: .62;
+    overflow: hidden;
+}
+
+.route-calendar-day.no-flights::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background-image: repeating-linear-gradient(
+        -45deg,
+        rgba(255,255,255,.055) 0,
+        rgba(255,255,255,.055) 1px,
+        transparent 1px,
+        transparent 8px
+    );
+}
+
+.route-calendar-day.past-day {
+    background: rgba(15,20,27,.42);
+    color: rgba(255,255,255,.28);
+    opacity: .40;
+    cursor: default;
+}
+
+.route-calendar-day.past-day.no-flights::after {
+    display: none;
+}
+
+.route-calendar-day.past-day.has-flights:hover {
+    background: rgba(15,20,27,.42);
+    box-shadow: none;
+}
+
+.route-calendar-day-number {
+    position: relative;
+    z-index: 1;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.route-calendar-day-dots {
+    position: absolute;
+    right: 7px;
+    bottom: 7px;
+    display: flex;
+    gap: 1px;
+}
+
+.route-calendar-flight-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: rgba(112,194,241,.90);
+}
+
+.route-calendar-flight-dot.charter {
+    background: rgba(91, 196, 123, .95);
+}
+
+.route-calendar-tooltip {
+    position: fixed;
+    z-index: 5000;
+    width: max-content;
+    max-width: 350px;
+    min-width: 245px;
+    padding: 10px 12px;
+    box-sizing: border-box;
+    border: 1px solid rgba(255,255,255,.13);
+    border-radius: 9px;
+    background: rgba(8,22,39,.98);
+    box-shadow: 0 10px 28px rgba(0,0,0,.42);
+    color: #fff;
+    pointer-events: none;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(3px);
+    transition: opacity .10s ease, transform .10s ease, visibility .10s ease;
+}
+
+.route-calendar-tooltip.visible {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.route-calendar-tooltip-flight {
+    display: grid;
+    grid-template-columns: minmax(0,auto) minmax(0,auto) minmax(0,auto);
+    gap: 1px;
+    align-items: center;
+    padding: 5px 0;
+    border-top: 1px solid rgba(255,255,255,.07);
+    font-size: 11px;
+}
+
+.route-calendar-tooltip-flight:first-of-type {
+    border-top: none;
+}
+
+.route-calendar-tooltip-time {
+    font-weight: 400;
+    white-space: nowrap;
+}
+
+.route-calendar-tooltip-number {
+    color: rgba(255,255,255,.88);
+    font-weight: 700;
+    white-space: nowrap;
+    text-align: center;
+}
+
+.route-calendar-tooltip-aircraft {
+    color: rgba(255,255,255,.60);
+    text-align: right;
+}
+
+@media (max-width: 500px) {
+    .route-calendar-grid {
+        grid-template-rows: 26px repeat(6, 38px);
+    }
+
+    .route-calendar-day {
+        padding: 6px;
+    }
+
+    .route-calendar-day-number {
+        font-size: 12px;
+    }
+}
+
 .route-schedule-button {
     width: 100%;
     margin-top: 16px;
@@ -940,7 +1258,7 @@ rgba(255,255,255,.10);
       line-height: 1.45;
       white-space: nowrap;
     } .schedule-flight-number {
-      margin-top: 2px;
+      margin-top: 0;
       color: rgba(255,255,255,0.66);
       font-size: 20px;
       font-weight: 700;
@@ -1666,6 +1984,7 @@ rgba(255,255,255,.10);
         font-size: 11px;
     }
 }
+.route-calendar-tooltip-time { font-weight: 400 !important; }
 </style>
 
 <style id="nordica-network-cleanup-v139">
@@ -1816,9 +2135,11 @@ rgba(255,255,255,.10);
 
 <div id="info-panel">
     <div id="panel-header">
+        <button id="panel-switch" type="button" aria-label="Switch route direction" title="Switch route direction">⇄</button>
         <button id="panel-close" type="button" aria-label="Close airport information">×</button>
-        <div class="eyebrow">Nordica</div>
+        
         <h1 id="airport-name">Network Map</h1>
+        <div id="route-season-label"></div>
         <div id="airport-code">OSL / ENGM · Primary Hub</div>
         <div id="airport-role" class="airport-role"></div>
 
@@ -1843,7 +2164,7 @@ rgba(255,255,255,.10);
 
 <style> .daily-flight-operator {
       display: block;
-      margin-top: 2px;
+      margin-top: 0;
       margin-left: 0;
       color: rgba(255,255,255,0.60);
       font-size: 14px;
@@ -2339,6 +2660,32 @@ map.on("click", function() {
 });
 
 
+document.getElementById("panel-switch").addEventListener("click", function(e) {
+    e.stopPropagation();
+
+    if (!selectedRouteKey || !scheduleRouteFrom || !scheduleRouteTo) return;
+
+    const newOrigin = scheduleRouteTo;
+    const newDestination = scheduleRouteFrom;
+    const currentYear = scheduleCalendarYear;
+
+    showRouteCalendarLoading();
+    const currentMonth = scheduleCalendarMonth;
+
+    selectRoute(newOrigin, newDestination);
+
+    // Keep the user on the same calendar month when changing direction.
+    if (!isSeasonalWinterRoute() ||
+        getSeasonalWinterCalendarMonths().some(m =>
+            m.year === currentYear && m.month === currentMonth
+        )) {
+        scheduleCalendarYear = currentYear;
+        scheduleCalendarMonth = currentMonth;
+        renderRouteCalendar();
+    }
+});
+
+
 document.getElementById("panel-close").addEventListener("click", function(e) {
     e.stopPropagation();
 
@@ -2550,13 +2897,6 @@ let scheduleRouteTo = null;
 */
 document.getElementById("panel-content").addEventListener("click", function(e) {
 
-    const scheduleButton = e.target.closest(".route-schedule-button");
-    if (scheduleButton) {
-        e.stopPropagation();
-        openScheduleModal();
-        return;
-    }
-
     const row = e.target.closest(".destination[data-destination-code]");
 
     if (!row || !selectedAirportCode) return;
@@ -2590,6 +2930,9 @@ function selectRoute(originCode, destinationCode) {
     });
 
     selectedRouteKey = `${route.from}-${route.to}`;
+
+    const panelSwitch = document.getElementById("panel-switch");
+    if (panelSwitch) panelSwitch.style.display = "flex";
 
     const airportTabs = document.getElementById("airport-tabs");
     if (airportTabs) airportTabs.style.display = "none";
@@ -2648,8 +2991,30 @@ function selectRoute(originCode, destinationCode) {
         });
     });
 
-    document.getElementById("airport-name").textContent =
-        `${origin.name} ${originCode} - ${destination.name} ${destinationCode}`;
+    document.getElementById("airport-name").innerHTML =
+        `${origin.name} ${originCode} -<br>${destination.name} ${destinationCode}`;
+
+    const routeSeasonLabel = document.getElementById("route-season-label");
+    if (routeSeasonLabel) {
+        if (isSeasonalWinterRoute()) {
+            routeSeasonLabel.textContent = "Operated from October to April";
+            routeSeasonLabel.style.display = "block";
+            document.getElementById("info-panel").classList.remove("route-no-season");
+        } else {
+            const outboundSchedule = getScheduleDirectionData("outbound");
+            const inboundSchedule = getScheduleDirectionData("inbound");
+            const hasAnySchedule = outboundSchedule || inboundSchedule;
+
+            if (!hasAnySchedule) {
+                routeSeasonLabel.textContent = "Starts in April";
+                routeSeasonLabel.style.display = "block";
+            } else {
+                routeSeasonLabel.textContent = "";
+                routeSeasonLabel.style.display = "none";
+            document.getElementById("info-panel").classList.add("route-no-season");
+            }
+        }
+    }
 
     // Route pop-ups must not carry over the role/crew-base label
     // from the previously selected airport.
@@ -2670,49 +3035,27 @@ function selectRoute(originCode, destinationCode) {
             : (route.charter ? "Charter route" : "");
 
     let routeHTML = `
-        <div class="route-detail">
-            <div class="route-detail-row">
-                <span>Flight time</span>
-                <strong>${(() => {
-                        const [hours, minutes] = (route.flightTime || "01:00").split(":");
-                        const h = parseInt(hours, 10);
-                        const m = parseInt(minutes, 10);
-                        if (h === 0) return `${m} minutes`;
-                        if (m === 0) return `${h} ${h === 1 ? "hour" : "hours"}`;
-                        return `${h} ${h === 1 ? "hour" : "hours"} and ${m} minutes`;
-                    })()}${
-                        (
-                            (originCode === "TRD" && destinationCode === "TOS") ||
-                            (originCode === "TOS" && destinationCode === "TRD")
-                        )
-                            ? '<br><span class="via-bodo">(Via Bodø)</span>'
-                            : ""
-                    }</strong>
+        <div class="route-calendar" id="route-calendar">
+            <div class="route-calendar-loading" id="route-calendar-loading" aria-hidden="true">
+                <span class="route-calendar-spinner"></span>
+                <span>Updating schedule</span>
             </div>
+            <div class="route-calendar-header">
+                <button class="route-calendar-arrow route-calendar-prev" type="button"
+                        onclick="changeRouteCalendarMonth(-1)" aria-label="Previous month">‹</button>
+                <h3 class="route-calendar-month" id="route-calendar-month"></h3>
+                <button class="route-calendar-arrow route-calendar-next" type="button"
+                        onclick="changeRouteCalendarMonth(1)" aria-label="Next month">›</button>
+            </div>
+
+            <div class="route-calendar-grid" id="route-calendar-grid"></div>
+        </div>
     `;
-
-    routeHTML += `
-            <div class="route-detail-row seasonal-row">
-                <span>Season</span>
-                <strong>${route.season || (route.seasonal ? `${route.seasonStart} - ${route.seasonEnd}` : "Year-round")}</strong>
-            </div>
-        `;
-
-    routeHTML += `
-            <div class="route-detail-row">
-                <span>Equipment</span>
-                <strong>${
-                    (route.aircraftType || "Bombardier CRJ")
-                        .split(" / ")
-                        .map(type => type === "Boeing 737-8 MAX" ? type : type)
-                        .join("<br>")
-                }</strong>
-            </div>
-            <button class="route-schedule-button" type="button">Route schedule</button>
-        </div>`;
 
     document.getElementById("panel-content").innerHTML = routeHTML;
 
+    initialiseRouteCalendar();
+    renderRouteCalendar();
     applyNetworkFilters();
 
     /*
@@ -3000,6 +3343,10 @@ function selectAirport(code) {
 
     selectedAirportCode = code;
     selectedRouteKey = null;
+
+    const panelSwitch = document.getElementById("panel-switch");
+    if (panelSwitch) panelSwitch.style.display = "none";
+
     activeAirportTab = "destinations";
     updateFilterVisibility();
 
@@ -12126,7 +12473,10 @@ function formatScheduleAircraft(aircraft) {
 
 function splitFlightDetails(flight) {
     const raw = (flight || "").trim();
-    const parts = raw.split(/\s*\/\s*/);
+
+    // Flight data uses both "/" and "|" as separators in the schedule data.
+    // Accept either so every flight number/equipment pair displays correctly.
+    const parts = raw.split(/\s*[\/|]\s*/);
 
     return {
         number: parts[0] || "",
@@ -12249,6 +12599,255 @@ function isCharterScheduleFlight(flight) {
     );
 
     return route && (route.type === "charter" || route.charter === true);
+}
+
+let routeCalendarTooltip = null;
+
+function ensureRouteCalendarTooltip() {
+    if (routeCalendarTooltip) return routeCalendarTooltip;
+
+    routeCalendarTooltip = document.createElement("div");
+    routeCalendarTooltip.className = "route-calendar-tooltip";
+    routeCalendarTooltip.setAttribute("aria-hidden", "true");
+    document.body.appendChild(routeCalendarTooltip);
+
+    return routeCalendarTooltip;
+}
+
+function hideRouteCalendarTooltip() {
+    if (!routeCalendarTooltip) return;
+    routeCalendarTooltip.classList.remove("visible");
+    routeCalendarTooltip.setAttribute("aria-hidden", "true");
+}
+
+function positionRouteCalendarTooltip(dayButton) {
+    const tooltip = ensureRouteCalendarTooltip();
+    const rect = dayButton.getBoundingClientRect();
+
+    // Prefer directly above the hovered date. If there is not enough room,
+    // place it below instead.
+    const tooltipHeight = tooltip.offsetHeight || 80;
+    const gap = 8;
+
+    let top = rect.top - tooltipHeight - gap;
+    if (top < 10) top = rect.bottom + gap;
+
+    let left = rect.left + rect.width / 2 - tooltip.offsetWidth / 2;
+    const margin = 10;
+    left = Math.max(margin, Math.min(left, window.innerWidth - tooltip.offsetWidth - margin));
+
+    tooltip.style.left = `${left}px`;
+    tooltip.style.top = `${top}px`;
+}
+
+function showRouteCalendarTooltip(dayButton, year, month, day) {
+    const flights = getFlightsForDate("outbound", year, month, day);
+    if (!flights.length) return;
+
+    const tooltip = ensureRouteCalendarTooltip();
+    tooltip.innerHTML = `
+        ${flights.map(flight => {
+            const time = (flight.times && flight.times[0]) || "";
+            const details = splitFlightDetails(flight.flight);
+            const parts = String(time).split(/\s*-\s*/);
+            const departure = parts[0] || "";
+            const arrival = parts[1] || "";
+            return `
+                <div class="route-calendar-tooltip-flight">
+                    <span class="route-calendar-tooltip-time">${departure} - ${arrival}</span>
+                    <span class="route-calendar-tooltip-number">${details.number}</span>
+                    <span class="route-calendar-tooltip-aircraft">${details.aircraft}</span>
+                </div>
+            `;
+        }).join("")}
+    `;
+
+    tooltip.classList.add("visible");
+    tooltip.setAttribute("aria-hidden", "false");
+    positionRouteCalendarTooltip(dayButton);
+}
+
+function showRouteCalendarLoading() {
+    const loading = document.getElementById("route-calendar-loading");
+    if (!loading) return;
+
+    loading.classList.add("visible");
+    loading.setAttribute("aria-hidden", "false");
+
+    window.clearTimeout(showRouteCalendarLoading._timer);
+    showRouteCalendarLoading._timer = window.setTimeout(() => {
+        loading.classList.remove("visible");
+        loading.setAttribute("aria-hidden", "true");
+    }, 650);
+}
+
+function initialiseRouteCalendar() {
+    // Reset to the first currently relevant month whenever a route is selected.
+    const today = getScheduleToday();
+
+    scheduleCalendarYear = today.year;
+    scheduleCalendarMonth = today.month;
+
+    if (isSeasonalWinterRoute()) {
+        const months = getSeasonalWinterCalendarMonths();
+        const current = months.find(m => m.year === today.year && m.month === today.month);
+
+        if (!current && months.length) {
+            scheduleCalendarYear = months[0].year;
+            scheduleCalendarMonth = months[0].month;
+        }
+    }
+
+    ensureRouteCalendarTooltip();
+    hideRouteCalendarTooltip();
+}
+
+function renderRouteCalendar() {
+    const monthTitle = document.getElementById("route-calendar-month");
+    const grid = document.getElementById("route-calendar-grid");
+
+    if (!monthTitle || !grid || !scheduleRouteFrom || !scheduleRouteTo) return;
+
+    monthTitle.textContent =
+        `${scheduleMonthNames[scheduleCalendarMonth]} ${scheduleCalendarYear}`;
+
+    let calendar = scheduleWeekdayNames.map(day =>
+        `<div class="route-calendar-weekday">${day.substring(0, 3)}</div>`
+    ).join("");
+
+    const firstDay = new Date(scheduleCalendarYear, scheduleCalendarMonth, 1);
+    const daysInMonth = new Date(
+        scheduleCalendarYear,
+        scheduleCalendarMonth + 1,
+        0
+    ).getDate();
+    const firstWeekday = (firstDay.getDay() + 6) % 7;
+    const today = getScheduleToday();
+
+    for (let i = 0; i < firstWeekday; i++) {
+        calendar += `<div class="route-calendar-day empty"></div>`;
+    }
+
+    for (let day = 1; day <= daysInMonth; day++) {
+        const flights = getFlightsForDate(
+            "outbound",
+            scheduleCalendarYear,
+            scheduleCalendarMonth,
+            day
+        );
+
+        const hasFlights = flights.length > 0;
+        const isPast =
+            scheduleCalendarYear < today.year ||
+            (scheduleCalendarYear === today.year &&
+             scheduleCalendarMonth === today.month &&
+             day < today.day);
+
+        const classes = [
+            "route-calendar-day",
+            hasFlights ? "has-flights" : "no-flights",
+            isPast ? "past-day" : ""
+        ].filter(Boolean).join(" ");
+
+        calendar += `
+            <button
+                type="button"
+                class="${classes}"
+                ${hasFlights && !isPast
+                    ? `onmouseenter="showRouteCalendarTooltip(this, ${scheduleCalendarYear}, ${scheduleCalendarMonth}, ${day})"
+                       onmouseleave="hideRouteCalendarTooltip()"
+                       onfocus="showRouteCalendarTooltip(this, ${scheduleCalendarYear}, ${scheduleCalendarMonth}, ${day})"
+                       onblur="hideRouteCalendarTooltip()"`
+                    : ""}
+                aria-label="${day} ${scheduleMonthNames[scheduleCalendarMonth]}${hasFlights ? `: ${flights.length} flight${flights.length === 1 ? "" : "s"}` : ": no flights"}"
+            >
+                <span class="route-calendar-day-number">${day}</span>
+                ${hasFlights
+                    ? `<span class="route-calendar-day-dots">
+                         <span class="route-calendar-flight-dot${flights.some(isCharterScheduleFlight) ? " charter" : ""}"></span>
+                       </span>`
+                    : ""}
+            </button>
+        `;
+    }
+
+    const totalCells = firstWeekday + daysInMonth;
+    const remaining = 42 - totalCells;
+
+    for (let i = 0; i < remaining; i++) {
+        calendar += `<div class="route-calendar-day empty"></div>`;
+    }
+
+    grid.innerHTML = calendar;
+    updateRouteCalendarMonthButtons();
+}
+
+function updateRouteCalendarMonthButtons() {
+    const prev = document.querySelector(".route-calendar-prev");
+    const next = document.querySelector(".route-calendar-next");
+
+    if (!prev || !next) return;
+
+    if (isSeasonalWinterRoute()) {
+        const months = getSeasonalWinterCalendarMonths();
+        const idx = months.findIndex(m =>
+            m.year === scheduleCalendarYear && m.month === scheduleCalendarMonth
+        );
+
+        prev.classList.toggle("hidden", idx <= 0);
+        next.classList.toggle("hidden", idx < 0 || idx >= months.length - 1);
+        return;
+    }
+
+    const currentIndex =
+        getScheduleMonthIndex(scheduleCalendarYear, scheduleCalendarMonth);
+    const minIndex = 0;
+    const max = getScheduleMaxDate();
+    const maxIndex = getScheduleMonthIndex(max.year, max.month);
+
+    prev.classList.toggle("hidden", currentIndex <= minIndex);
+    next.classList.toggle("hidden", currentIndex >= maxIndex);
+}
+
+function changeRouteCalendarMonth(delta) {
+    hideRouteCalendarTooltip();
+
+    if (isSeasonalWinterRoute()) {
+        const months = getSeasonalWinterCalendarMonths();
+        let idx = months.findIndex(m =>
+            m.year === scheduleCalendarYear && m.month === scheduleCalendarMonth
+        );
+
+        if (idx < 0) idx = 0;
+
+        const nextIndex = idx + delta;
+        if (nextIndex < 0 || nextIndex >= months.length) return;
+
+        scheduleCalendarYear = months[nextIndex].year;
+        scheduleCalendarMonth = months[nextIndex].month;
+    } else {
+        let month = scheduleCalendarMonth + delta;
+        let year = scheduleCalendarYear;
+
+        if (month < 0) {
+            month = 11;
+            year--;
+        } else if (month > 11) {
+            month = 0;
+            year++;
+        }
+
+        const newIndex = getScheduleMonthIndex(year, month);
+        const max = getScheduleMaxDate();
+        const maxIndex = getScheduleMonthIndex(max.year, max.month);
+
+        if (newIndex < 0 || newIndex > maxIndex) return;
+
+        scheduleCalendarYear = year;
+        scheduleCalendarMonth = month;
+    }
+
+    renderRouteCalendar();
 }
 
 function renderScheduleDirection(direction) {
@@ -12575,68 +13174,8 @@ function closeScheduleModal() {
     modal.setAttribute("aria-hidden", "true");
 }
 
-document.addEventListener("DOMContentLoaded", function() {
-    const dayCloseButton = document.getElementById("schedule-day-close");
-    const dayModal = document.getElementById("schedule-day-modal");
-
-    if (dayCloseButton) {
-        dayCloseButton.addEventListener("click", closeScheduleDay);
-    }
-
-    if (dayModal) {
-        dayModal.addEventListener("click", function(event) {
-            if (event.target === dayModal) closeScheduleDay();
-        });
-    }
-
-    document.getElementById("schedule-modal-close").addEventListener("click", closeScheduleModal);
-    document.getElementById("schedule-tab-outbound").addEventListener("click", () => switchScheduleTab("outbound"));
-    document.getElementById("schedule-tab-inbound").addEventListener("click", () => switchScheduleTab("inbound"));
-
-    document.getElementById("schedule-modal").addEventListener("click", function(e) {
-        if (e.target === this) closeScheduleModal();
-    });
-
-    document.addEventListener("keydown", function(e) {
-        if (e.key === "Escape") closeScheduleModal();
-    });
-});
 </script>
 
-<!-- Flight Schedule Modal -->
-<div id="schedule-modal" aria-hidden="true">
-    <div id="schedule-modal-content" role="dialog" aria-modal="true" aria-labelledby="schedule-modal-title">
-        <div id="schedule-modal-header">
-            <h2 id="schedule-modal-title">Flight Schedule</h2>
-            <button id="schedule-modal-close" type="button" aria-label="Close schedule">×</button>
-        </div>
-
-        <div id="schedule-tabs" role="tablist">
-            <button class="schedule-tab active" id="schedule-tab-outbound" type="button" role="tab" aria-selected="true">
-                Origin → Destination
-            </button>
-            <button class="schedule-tab" id="schedule-tab-inbound" type="button" role="tab" aria-selected="false">
-                Destination → Origin
-            </button>
-        </div>
-
-        <div id="schedule-views">
-            <div class="schedule-view active" id="schedule-view-outbound" role="tabpanel"></div>
-            <div class="schedule-view" id="schedule-view-inbound" role="tabpanel"></div>
-        </div>
-    </div>
-</div>
-
-  <!-- Daily Flight List Modal -->
-  <div id="schedule-day-modal" aria-hidden="true">
-    <div id="schedule-day-modal-content" role="dialog" aria-modal="true" aria-labelledby="schedule-day-title">
-      <div id="schedule-day-header">
-        <h2 id="schedule-day-title">Flight day</h2>
-        <button id="schedule-day-close" type="button" aria-label="Close day schedule">×</button>
-      </div>
-      <div id="schedule-day-flights"></div>
-    </div>
-  </div>
 </body>
 </html>
 
