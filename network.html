@@ -1667,6 +1667,89 @@ rgba(255,255,255,.10);
     }
 }
 </style>
+
+<style id="nordica-network-cleanup-v139">
+/* ===== Schedule popup / fixed Nordica header =====
+   Desktop header is 76px high. Leave a small, deliberate gap below it
+   so the schedule window can never sit underneath the header. */
+#schedule-modal {
+    align-items: flex-start !important;
+    justify-content: center !important;
+    padding: 88px 28px 12px !important;
+    box-sizing: border-box !important;
+}
+
+#schedule-modal-content {
+    width: min(1180px, 94vw) !important;
+    height: min(720px, calc(100vh - 100px)) !important;
+    max-height: calc(100vh - 100px) !important;
+    min-height: 0 !important;
+}
+
+/* Mobile: 68px header + a small gap. */
+@media (max-width: 700px) {
+    #schedule-modal {
+        padding: 80px 12px 12px !important;
+    }
+
+    #schedule-modal-content {
+        width: 96vw !important;
+        height: calc(100vh - 92px) !important;
+        max-height: calc(100vh - 92px) !important;
+        min-height: 0 !important;
+    }
+}
+
+/* ===== Network map frame =====
+   Keep the bottom frame much thinner than before and use the same
+   thickness on the left and right sides. */
+
+</style>
+
+
+<style id="nordica-network-frame-v141">
+/*
+  V1.0.141
+  The large navy strip at the bottom was not a frame; it was the unused
+  76px of page height created by #map's calc(100% - 76px).
+  Let the map occupy the entire viewport. The fixed header naturally covers
+  its top portion, while the frame is drawn over the map itself.
+*/
+#map {
+    height: 100% !important;
+    width: 100% !important;
+    border: 0 !important;
+    box-sizing: border-box !important;
+    position: relative !important;
+}
+
+/* Thin, visible side + bottom frame, above all Leaflet layers. */
+#map::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 9999;
+    pointer-events: none;
+    box-sizing: border-box;
+    border-left: 3px solid rgba(255,255,255,0.12);
+    border-right: 3px solid rgba(255,255,255,0.12);
+    border-bottom: 3px solid rgba(255,255,255,0.12);
+}
+
+/* The header is 68px on mobile, but the map still fills the viewport. */
+@media (max-width: 700px) {
+    #map {
+        height: 100% !important;
+    }
+
+    #map::after {
+        border-left-width: 3px;
+        border-right-width: 3px;
+        border-bottom-width: 3px;
+    }
+}
+</style>
+
 </head>
 
 <body>
