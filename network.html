@@ -766,6 +766,19 @@ rgba(255,255,255,.10);
     line-height: 1.35;
     text-align: center;
 }
+.route-starts-april-message {
+    min-height: 280px;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 70px 20px;
+    color: rgba(255,255,255,.78);
+    font-size: 28px;
+    font-weight: 600;
+    line-height: 1.2;
+    text-align: center;
+}
 .route-calendar.schedule-transition-out {
     opacity: .32;
     transform: translateX(-7px);
@@ -2133,7 +2146,6 @@ rgba(255,255,255,.10);
                 <span>Instagram</span>
             </a>
             <a class="nav-button" href="index.html">Home</a>
-            <a class="nav-button" href="#">Flight search</a>
             <a class="nav-button" href="network.html">Network</a>
             <a class="nav-button" href="fleet.html">Fleet</a>
         </nav>
@@ -2512,7 +2524,22 @@ const airports = {
         icao: "ENAT", name: "Alta", city: "Alta", country: "Norway",
         lat: 69.9761, lng: 23.3717, hub: false,
         info: "Destination airport in Northern Norway."
-    }
+    },
+    BOJ: {
+        icao: "LBBG", name: "Burgas", city: "Burgas", country: "Bulgaria",
+        lat: 42.5696, lng: 27.5152, hub: false,
+        info: "International leisure destination."
+    },
+    KGS: {
+        icao: "LGKO", name: "Kos", city: "Kos", country: "Greece",
+        lat: 36.7933, lng: 27.0917, hub: false,
+        info: "International leisure destination."
+    },
+    ZTH: {
+        icao: "LGZA", name: "Zakynthos", city: "Zakynthos", country: "Greece",
+        lat: 37.7509, lng: 20.8843, hub: false,
+        info: "International leisure destination."
+    },
 };
 
 
@@ -2569,7 +2596,12 @@ const routes = [
     { from: "OSL", to: "GVA" , flightTime: "02:30", aircraftType: "Bombardier CRJ" , season: "Year-round" },
     { from: "OSL", to: "ZRH" , flightTime: "02:25", aircraftType: "Bombardier CRJ" , season: "Year-round" },
     { from: "OSL", to: "HAU" , flightTime: "00:50", aircraftType: "Bombardier CRJ" , season: "Year-round" },
+    { from: "OSL", to: "BOJ", charter: true, startsMonth: "June", startsYear: 2027 },
+    { from: "OSL", to: "KGS", charter: true, startsMonth: "June", startsYear: 2027 },
+    { from: "OSL", to: "ZTH", charter: true, startsMonth: "June", startsYear: 2027 },
     { from: "SVG", to: "ALC" , flightTime: "03:10", aircraftType: "Boeing 737-8 MAX" , season: "Year-round" , frequency: "Sat" },
+    { from: "SVG", to: "SPU", startsMonth: "April", startsYear: 2027 },
+    { from: "SVG", to: "CHQ", startsMonth: "April", startsYear: 2027 },
     { from: "BGO", to: "GOT" , flightTime: "01:25", aircraftType: "Bombardier CRJ" , season: "Year-round" , frequency: "Mon · Tue · Wed · Thu · Fri · Sun" },
     { from: "BGO", to: "EDI" , flightTime: "01:25", aircraftType: "Bombardier CRJ" , season: "Year-round" , frequency: "Tue · Thu · Sat" },
     { from: "OSL", to: "AAR" , flightTime: "01:10", aircraftType: "Bombardier CRJ" , season: "Year-round" },
@@ -2591,6 +2623,8 @@ const routes = [
     { from: "BGO", to: "LPA" , flightTime: "05:35", seasonal: true, seasonStart: "October", seasonEnd: "April", aircraftType: "Boeing 737-8 MAX" , season: "October - April" , frequency: "Sat" , flightType: "Combined flight" },
     { from: "BGO", to: "ARN" , flightTime: "01:20", aircraftType: "Bombardier CRJ" , season: "Year-round" , frequency: "Mon · Wed · Fri · Sun" },
     { from: "BGO", to: "TOS" , flightTime: "02:00", aircraftType: "Bombardier CRJ" , season: "Year-round" , frequency: "Mon · Wed · Fri · Sun" },
+    { from: "BGO", to: "SPU", startsMonth: "April", startsYear: 2027 },
+    { from: "BGO", to: "CHQ", startsMonth: "April", startsYear: 2027 },
 
     // SVG
     { from: "SVG", to: "LHR" , flightTime: "01:50", aircraftType: "Boeing 737-8 MAX" , season: "Year-round" , frequency: "Mon · Tue · Wed · Thu · Fri · Sun" },
@@ -2622,6 +2656,8 @@ const routes = [
 ,
     { from: "TFS", to: "GOT", flightTime: "05:30", aircraftType: "Boeing 737-8 MAX", season: "October - April", frequency: "Sat" , flightType: "Combined flight" }
 ,
+    { from: "GOT", to: "CHQ", startsMonth: "April", startsYear: 2027 },
+
     { from: "LPA", to: "AES", flightTime: "05:40", aircraftType: "Boeing 737-8 MAX", season: "October - April", frequency: "Thu", flightType: "Combined flight" }
 ,
     { from: "BGO", to: "TFS", flightTime: "05:25", aircraftType: "Boeing 737-8 MAX", season: "October - April", frequency: "Sun", flightType: "Combined flight" }
@@ -3065,11 +3101,18 @@ function selectRoute(originCode, destinationCode) {
         routeComments.push(`<span class="operator-label">Operated by <strong>Nordic Airlink</strong><span class="operator-info">?<span class="operator-tooltip">Routes operated by Nordic Airlink primarily serve commuters and may offer a reduced onboard serving</span></span></span>`);
     }
 
+    const currentRoute = routes.find(r =>
+        (r.from === originCode && r.to === destinationCode) ||
+        (r.from === destinationCode && r.to === originCode)
+    );
+    const startsMonth = currentRoute?.startsMonth || "April";
+    const startsYear = currentRoute?.startsYear || 2027;
+    const startsInFuture = !isSeasonalWinterRoute() && !hasAnySchedule;
+
     if (isSeasonalWinterRoute()) {
         routeComments.push("Operating from October to April");
         document.getElementById("info-panel").classList.remove("route-no-season", "route-starts-april");
-    } else if (!hasAnySchedule) {
-        routeComments.push("Starts in April");
+    } else if (startsInFuture) {
         document.getElementById("info-panel").classList.add("route-no-season", "route-starts-april");
     } else {
         document.getElementById("info-panel").classList.remove("route-no-season", "route-starts-april");
@@ -3077,21 +3120,26 @@ function selectRoute(originCode, destinationCode) {
 
     document.getElementById("airport-code").innerHTML = "";
 
-    let routeHTML = `
-        <div class="route-calendar" id="route-calendar">
-            <div class="route-calendar-header">
-                <button class="route-calendar-arrow route-calendar-prev" type="button"
-                        onclick="changeRouteCalendarMonth(-1)" aria-label="Previous month">‹</button>
-                <h3 class="route-calendar-month" id="route-calendar-month"></h3>
-                <button class="route-calendar-arrow route-calendar-next" type="button"
-                        onclick="changeRouteCalendarMonth(1)" aria-label="Next month">›</button>
+    let routeHTML = startsInFuture
+        ? `
+            <div class="route-starts-april-message">Starts in ${startsMonth} ${startsYear}</div>
+            <div class="route-popup-comments" id="route-popup-comments"></div>
+        `
+        : `
+            <div class="route-calendar" id="route-calendar">
+                <div class="route-calendar-header">
+                    <button class="route-calendar-arrow route-calendar-prev" type="button"
+                            onclick="changeRouteCalendarMonth(-1)" aria-label="Previous month">‹</button>
+                    <h3 class="route-calendar-month" id="route-calendar-month"></h3>
+                    <button class="route-calendar-arrow route-calendar-next" type="button"
+                            onclick="changeRouteCalendarMonth(1)" aria-label="Next month">›</button>
+                </div>
+
+                <div class="route-calendar-grid" id="route-calendar-grid"></div>
             </div>
 
-            <div class="route-calendar-grid" id="route-calendar-grid"></div>
-        </div>
-
-        <div class="route-popup-comments" id="route-popup-comments"></div>
-    `;
+            <div class="route-popup-comments" id="route-popup-comments"></div>
+        `;
 
     document.getElementById("panel-content").innerHTML = routeHTML;
 
@@ -3101,8 +3149,10 @@ function selectRoute(originCode, destinationCode) {
         routeCommentsEl.style.display = routeComments.length ? "block" : "none";
     }
 
-    initialiseRouteCalendar();
-    renderRouteCalendar();
+    if (!startsInFuture) {
+        initialiseRouteCalendar();
+        renderRouteCalendar();
+    }
     applyNetworkFilters();
 
     /*
