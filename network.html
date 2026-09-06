@@ -2549,6 +2549,21 @@ const airports = {
         lat: 37.7509, lng: 20.8843, hub: false,
         info: "International leisure destination."
     },
+    SZG: {
+        icao: "LOWS", name: "Salzburg", city: "Salzburg", country: "Austria",
+        lat: 47.7933, lng: 13.0043, hub: false,
+        info: "International destination."
+    },
+    GNB: {
+        icao: "LFLS", name: "Grenoble Alpes-Isère", city: "Grenoble", country: "France",
+        lat: 45.3629, lng: 5.3294, hub: false,
+        info: "Charter destination."
+    },
+    LYS: {
+        icao: "LFLL", name: "Lyon–Saint Exupéry", city: "Lyon", country: "France",
+        lat: 45.7256, lng: 5.0811, hub: false,
+        info: "International destination."
+    },
 };
 
 
@@ -2608,6 +2623,9 @@ const routes = [
     { from: "OSL", to: "BOJ", charter: true, startsMonth: "June", startsYear: 2027 },
     { from: "OSL", to: "KGS", charter: true, startsMonth: "June", startsYear: 2027 },
     { from: "OSL", to: "ZTH", charter: true, startsMonth: "June", startsYear: 2027 },
+    { from: "OSL", to: "SZG", startsText: "Starts in December" },
+    { from: "OSL", to: "GNB", charter: true, startsText: "Starts in December" },
+    { from: "OSL", to: "LYS", startsMonth: "April", startsYear: 2027 },
     { from: "SVG", to: "ALC" , flightTime: "03:10", aircraftType: "Boeing 737-8 MAX" , season: "Year-round" , frequency: "Sat" },
     { from: "SVG", to: "SPU", startsMonth: "April", startsYear: 2027 },
     { from: "SVG", to: "CHQ", startsMonth: "April", startsYear: 2027 },
@@ -3124,6 +3142,7 @@ function selectRoute(originCode, destinationCode) {
     );
     const startsMonth = currentRoute?.startsMonth || "April";
     const startsYear = currentRoute?.startsYear || 2027;
+    const startsText = currentRoute?.startsText || `Starts in ${startsMonth} ${startsYear}`;
     const startsInFuture = !isSeasonalWinterRoute() && !hasAnySchedule;
 
     if (isSeasonalWinterRoute()) {
@@ -3139,7 +3158,7 @@ function selectRoute(originCode, destinationCode) {
 
     let routeHTML = startsInFuture
         ? `
-            <div class="route-starts-april-message">Starts in ${startsMonth} ${startsYear}</div>
+            <div class="route-starts-april-message">${startsText}</div>
             <div class="route-popup-comments" id="route-popup-comments"></div>
         `
         : `
