@@ -1,8 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <link rel="icon" type="image/png" href="nordica-favicon.png">
-
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Nordica — Network</title>
@@ -3238,7 +3236,61 @@ function getAirportTodaySchedule(code, dayOffset = 0) {
     const departures = [];
     const arrivals = [];
 
+    /*
+       Airport boards must reflect the actual operating season, not just the
+       weekday contained in a timetable. This is especially important for
+       seasonal routes such as BGO-TFS, which may have a Sunday schedule but
+       do not operate until their published start month.
+    */
+    const monthNumbers = {
+        january: 0, february: 1, march: 2, april: 3,
+        may: 4, june: 5, july: 6, august: 7,
+        september: 8, october: 9, november: 10, december: 11
+    };
+
+    const isFlightOperatingOnDate = (originCode, destinationCode, flightDate) => {
+        const route = routes.find(r =>
+            (r.from === originCode && r.to === destinationCode) ||
+            (r.from === destinationCode && r.to === originCode)
+        );
+
+        if (!route) return true;
+
+        const year = flightDate.getUTCFullYear();
+        const month = flightDate.getUTCMonth();
+
+        // Routes with an explicit future start date do not operate before it.
+        if (route.startsYear != null && route.startsMonth) {
+            const startMonth = monthNumbers[String(route.startsMonth).toLowerCase()];
+            if (startMonth != null) {
+                const currentIndex = year * 12 + month;
+                const startIndex = Number(route.startsYear) * 12 + startMonth;
+                if (currentIndex < startIndex) return false;
+            }
+        }
+
+        const seasonText = String(route.season || "").trim().toLowerCase();
+        if (!seasonText || seasonText === "year-round") return true;
+
+        const range = seasonText.match(/^([a-z]+)\s*-\s*([a-z]+)$/);
+        if (!range) return true;
+
+        const startMonth = monthNumbers[range[1]];
+        const endMonth = monthNumbers[range[2]];
+        if (startMonth == null || endMonth == null) return true;
+
+        // Normal season, e.g. April-August.
+        if (startMonth <= endMonth) {
+            return month >= startMonth && month <= endMonth;
+        }
+
+        // Winter season crossing New Year, e.g. October-April.
+        return month >= startMonth || month <= endMonth;
+    };
+
     const addFlight = (originCode, destinationCode, flight, timeRange, via) => {
+        if (!isFlightOperatingOnDate(originCode, destinationCode, date)) return;
+
         const parts = String(timeRange || "").split(/\s*-\s*/);
         const departureTime = parts[0] || "";
         const arrivalTime = parts[1] || "";
@@ -3409,6 +3461,22 @@ function renderAirportScheduleTab(code, tab) {
         ? "Departures tomorrow"
         : "Arrivals tomorrow";
 
+    const formatBoardDate = (dayOffset) => {
+        const base = getScheduleToday();
+        const boardDate = new Date(Date.UTC(
+            base.year,
+            base.month,
+            base.day + dayOffset
+        ));
+
+        return boardDate.toLocaleDateString("en-GB", {
+            day: "2-digit",
+            month: "long",
+            year: "numeric",
+            timeZone: "UTC"
+        });
+    };
+
     function renderFlightList(flights) {
         if (!flights.length) {
             return `<div class="airport-schedule-empty">No scheduled flights.</div>`;
@@ -3459,6 +3527,7 @@ function renderAirportScheduleTab(code, tab) {
 
     let panelHTML = `
         <h2 class="airport-schedule-title">${todayTitle}</h2>
+        <div class="airport-schedule-date">${formatBoardDate(0)}</div>
         ${renderFlightList(todayFlights)}
 
         <div class="airport-schedule-day-divider"></div>
@@ -3466,6 +3535,7 @@ function renderAirportScheduleTab(code, tab) {
         <h2 class="airport-schedule-title airport-schedule-tomorrow-title">
             ${tomorrowTitle}
         </h2>
+        <div class="airport-schedule-date">${formatBoardDate(1)}</div>
         ${renderFlightList(tomorrowFlights)}
     `;
 
@@ -13526,4 +13596,15 @@ function closeScheduleModal() {
 #schedule-day-flights .daily-flight:last-child {
     margin-bottom: 16px;
 }
+
+.airport-schedule-date {
+    margin-top: -6px;
+    margin-bottom: 12px;
+    color: rgba(255,255,255,0.46);
+    font-size: 11px;
+    font-weight: 400;
+    line-height: 1.3;
+    text-align: left;
+}
+
 </style>
