@@ -10062,7 +10062,9 @@ const additionalSchedules = {
                 "times": [
                     "16:10 - 21:50"
                 ],
-                "flight": "2B1016 / B38M"
+                "flight": "2B1016 / B38M",
+                "startWeek": 40,
+                "endWeek": 15
             }
         ],
         "Wednesday": [
@@ -10070,7 +10072,9 @@ const additionalSchedules = {
                 "times": [
                     "16:10 - 21:50"
                 ],
-                "flight": "2B1016 / B38M"
+                "flight": "2B1016 / B38M",
+                "startWeek": 40,
+                "endWeek": 15
             }
         ],
         "Thursday": [
@@ -10099,7 +10103,9 @@ const additionalSchedules = {
                 "times": [
                     "09:35 - 15:15"
                 ],
-                "flight": "2B1015 / B38M"
+                "flight": "2B1015 / B38M",
+                "startWeek": 40,
+                "endWeek": 15
             }
         ],
         "Wednesday": [
@@ -10107,7 +10113,9 @@ const additionalSchedules = {
                 "times": [
                     "09:35 - 15:15"
                 ],
-                "flight": "2B1015 / B38M"
+                "flight": "2B1015 / B38M",
+                "startWeek": 40,
+                "endWeek": 15
             }
         ],
         "Thursday": [
@@ -12740,7 +12748,7 @@ const scheduleWeekdayNames = [
 
 
 function isScheduleActiveForDate(schedule, date) {
-    if (!schedule || !schedule.startWeek) return true;
+    if (!schedule || schedule.startWeek == null || schedule.endWeek == null) return true;
 
     const d = new Date(date);
     const utc = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
@@ -12751,12 +12759,18 @@ function isScheduleActiveForDate(schedule, date) {
     const yearStart = new Date(Date.UTC(isoYear, 0, 1));
     const isoWeek = Math.ceil((((utc - yearStart) / 86400000) + 1) / 7);
 
-    // October-April seasonal routes operate from ISO week 40 of 2026
-    // through ISO week 15 of 2027.
-    if (isoYear === 2026) return isoWeek >= 40;
-    if (isoYear === 2027) return isoWeek <= 15;
+    const startWeek = Number(schedule.startWeek);
+    const endWeek = Number(schedule.endWeek);
 
-    return false;
+    if (!Number.isFinite(startWeek) || !Number.isFinite(endWeek)) return true;
+
+    // Normal range, e.g. week 14 through week 42.
+    if (startWeek <= endWeek) {
+        return isoWeek >= startWeek && isoWeek <= endWeek;
+    }
+
+    // Range crossing New Year, e.g. week 40 through week 15.
+    return isoWeek >= startWeek || isoWeek <= endWeek;
 }
 
 function getScheduleDirectionData(direction) {
@@ -12846,8 +12860,6 @@ function getFlightsForDate(direction, year, month, day) {
         "ORB-LPA",
         "LPA-TRF",
         "TRF-LPA",
-        "OSL-LPA",
-        "LPA-OSL",
         "OSL-TFS",
         "TFS-OSL",
         "OSL-ACE",
@@ -12867,7 +12879,9 @@ function getFlightsForDate(direction, year, month, day) {
     const weekdayIndex = (date.getDay() + 6) % 7;
     const weekday = scheduleWeekdayNames[weekdayIndex];
 
-    return data[weekday] || [];
+    return (data[weekday] || []).filter(flight =>
+        isScheduleActiveForDate(flight, date)
+    );
 }
 
 function formatScheduleAircraft(aircraft) {
@@ -12946,7 +12960,6 @@ function isSeasonalWinterRoute() {
         "LPA-AES", "AES-LPA",
         "LPA-ORB", "ORB-LPA",
         "LPA-TRF", "TRF-LPA",
-        "OSL-LPA", "LPA-OSL",
         "OSL-TFS", "TFS-OSL",
         "OSL-ACE", "ACE-OSL",
         "OSL-HRG", "HRG-OSL"
