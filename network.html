@@ -2579,6 +2579,16 @@ const airports = {
         lat: 45.7256, lng: 5.0811, hub: false,
         info: "International destination."
     },
+    PRG: {
+        icao: "LKPR", name: "Václav Havel Airport Prague", city: "Prague", country: "Czech Republic",
+        lat: 50.1008, lng: 14.2632, hub: false,
+        info: "International destination."
+    },
+    FUE: {
+        icao: "GCFV", name: "Fuerteventura Airport", city: "Fuerteventura", country: "Spain",
+        lat: 28.4527, lng: -13.8638, hub: false,
+        info: "International leisure destination."
+    },
 };
 
 
@@ -2625,9 +2635,11 @@ const routes = [
     { from: "OSL", to: "MXP" , flightTime: "02:35", aircraftType: "Boeing 737-8 MAX" , season: "Year-round" },
     { from: "OSL", to: "NCE" , flightTime: "02:50", aircraftType: "Boeing 737-8 MAX" , season: "Year-round" },
     { from: "OSL", to: "POZ" , flightTime: "01:35", aircraftType: "Bombardier CRJ" , season: "Year-round" },
-    { from: "OSL", to: "TFS" , flightTime: "05:35", aircraftType: "Boeing 737-8 MAX" , season: "Year-round" },
+    { from: "OSL", to: "TFS" , flightTime: "05:35", aircraftType: "Boeing 737-8 MAX" , seasonal: true, seasonStart: "October", seasonEnd: "April", startWeek: 42, endWeek: 15, season: "October - April" },
+    { from: "OSL", to: "PRG", flightTime: "02:00", aircraftType: "Boeing 737-8 MAX", season: "Year-round", frequency: "Mon · Fri" },
+    { from: "OSL", to: "FUE", flightTime: "05:40", seasonal: true, seasonStart: "October", seasonEnd: "April", startWeek: 42, endWeek: 15, aircraftType: "Boeing 737-8 MAX", season: "Week 42 - Week 15", frequency: "Sat" },
     { from: "OSL", to: "VIE" , flightTime: "02:20", aircraftType: "Boeing 737-8 MAX" , season: "Year-round" },
-    { from: "OSL", to: "ACE", charter: true , flightTime: "05:20", seasonal: true, seasonStart: "October", seasonEnd: "April", aircraftType: "Boeing 737-8 MAX" , season: "October - April" },
+    { from: "OSL", to: "ACE", charter: true , flightTime: "05:20", seasonal: true, seasonStart: "October", seasonEnd: "April", startWeek: 42, endWeek: 15, aircraftType: "Boeing 737-8 MAX" , season: "October - April" },
     { from: "OSL", to: "WAW" , flightTime: "02:00", aircraftType: "Boeing 737-8 MAX" , season: "Year-round" },
     { from: "OSL", to: "MUC" , flightTime: "02:15", aircraftType: "Bombardier CRJ" , season: "Year-round" },
     { from: "OSL", to: "PMI" , flightTime: "03:25", seasonal: true, seasonStart: "April", seasonEnd: "October", aircraftType: "Boeing 737-8 MAX" , season: "April - October" },
@@ -2638,18 +2650,18 @@ const routes = [
     { from: "OSL", to: "BOJ", charter: true, startsMonth: "June", startsYear: 2027 },
     { from: "OSL", to: "KGS", charter: true, startsMonth: "June", startsYear: 2027 },
     { from: "OSL", to: "ZTH", charter: true, startsMonth: "June", startsYear: 2027 },
-    { from: "OSL", to: "SZG", startsText: "Starts in December" },
-    { from: "OSL", to: "GNB", charter: true, startsText: "Starts in December" },
+    { from: "OSL", to: "SZG", flightTime: "02:15", seasonal: true, seasonStart: "December", seasonEnd: "March", startWeek: 50, endWeek: 10, aircraftType: "Boeing 737-8 MAX", season: "Week 50 - Week 10", frequency: "Wed · Sun" },
+    { from: "OSL", to: "GNB", charter: true, flightTime: "02:30", seasonal: true, seasonStart: "December", seasonEnd: "March", startWeek: 50, endWeek: 10, aircraftType: "Boeing 737-8 MAX", season: "Week 50 - Week 10", frequency: "Mon · Fri" },
     { from: "OSL", to: "LYS", startsMonth: "April", startsYear: 2027 },
     { from: "SVG", to: "ALC" , flightTime: "03:10", aircraftType: "Boeing 737-8 MAX" , season: "Year-round" , frequency: "Sat" },
-    { from: "SVG", to: "SPU", startsMonth: "April", startsYear: 2027 },
-    { from: "SVG", to: "CHQ", startsMonth: "April", startsYear: 2027 },
+    { from: "SVG", to: "SPU", flightTime: "02:50", seasonal: true, startWeek: 16, endWeek: 40, season: "Week 16 - Week 40", aircraftType: "Boeing 737-8 MAX", frequency: "Sat" },
+    { from: "SVG", to: "CHQ", flightTime: "04:10", seasonal: true, startWeek: 16, endWeek: 40, season: "Week 16 - Week 40", aircraftType: "Boeing 737-8 MAX", frequency: "Sun" },
     { from: "BGO", to: "GOT" , flightTime: "01:25", aircraftType: "Bombardier CRJ" , season: "Year-round" , frequency: "Mon · Tue · Wed · Thu · Fri · Sun" },
     { from: "BGO", to: "EDI" , flightTime: "01:25", aircraftType: "Bombardier CRJ" , season: "Year-round" , frequency: "Tue · Thu · Sat" },
     { from: "OSL", to: "AAR" , flightTime: "01:10", aircraftType: "Bombardier CRJ" , season: "Year-round" },
     { from: "OSL", to: "HEL" , flightTime: "01:35", aircraftType: "Bombardier CRJ" , season: "Year-round" },
     { from: "OSL", to: "LCA", charter: true , flightTime: "04:10", aircraftType: "Boeing 737-8 MAX" , season: "Year-round" },
-    { from: "OSL", to: "HRG", charter: true , flightTime: "05:00", seasonal: true, seasonStart: "October", seasonEnd: "April", aircraftType: "Boeing 737-8 MAX" , season: "October - April" },
+    { from: "OSL", to: "HRG", charter: true , flightTime: "05:00", seasonal: true, seasonStart: "October", seasonEnd: "April", startWeek: 42, endWeek: 15, aircraftType: "Boeing 737-8 MAX" , season: "October - April" },
 
     // BGO
     { from: "BGO", to: "LHR" , flightTime: "02:00", aircraftType: "Boeing 737-8 MAX" , season: "Year-round" , frequency: "Mon · Tue · Wed · Thu · Fri · Sun" },
@@ -2662,11 +2674,13 @@ const routes = [
     { from: "BGO", to: "AGP" , flightTime: "03:40", aircraftType: "Boeing 737-8 MAX" , season: "Year-round" , frequency: "Sat" },
     { from: "BGO", to: "CPH" , flightTime: "01:20", aircraftType: "Bombardier CRJ" , season: "Year-round" , frequency: "Daily" },
     { from: "BGO", to: "DUS" , flightTime: "01:50", aircraftType: "Bombardier CRJ" , season: "Year-round" , frequency: "Tue · Thu · Sat" },
-    { from: "BGO", to: "LPA" , flightTime: "05:35", seasonal: true, seasonStart: "October", seasonEnd: "April", aircraftType: "Boeing 737-8 MAX" , season: "October - April" , frequency: "Sat" , flightType: "Combined flight" },
+    { from: "BGO", to: "LPA" , flightTime: "05:35", seasonal: true, seasonStart: "October", seasonEnd: "April", aircraftType: "Boeing 737-8 MAX" , startWeek: 42, endWeek: 15, season: "October - April" , frequency: "Sat" , flightType: "Combined flight" },
     { from: "BGO", to: "ARN" , flightTime: "01:20", aircraftType: "Bombardier CRJ" , season: "Year-round" , frequency: "Mon · Wed · Fri · Sun" },
     { from: "BGO", to: "TOS" , flightTime: "02:00", aircraftType: "Bombardier CRJ" , season: "Year-round" , frequency: "Mon · Wed · Fri · Sun" },
-    { from: "BGO", to: "SPU", startsMonth: "April", startsYear: 2027 },
-    { from: "BGO", to: "CHQ", startsMonth: "April", startsYear: 2027 },
+    { from: "BGO", to: "SPU", flightTime: "03:00", seasonal: true, seasonStart: "April", seasonEnd: "October", startWeek: 16, endWeek: 40, aircraftType: "Boeing 737-8 MAX", season: "Week 16 - Week 40", frequency: "Sat" },
+    { from: "BGO", to: "CHQ", flightTime: "04:20", seasonal: true, seasonStart: "April", seasonEnd: "October", startWeek: 16, endWeek: 40, aircraftType: "Boeing 737-8 MAX", season: "Week 16 - Week 40", frequency: "Sun" },
+    { from: "BGO", to: "NCE", flightTime: "02:50", seasonal: true, seasonStart: "April", seasonEnd: "October", startWeek: 16, endWeek: 40, aircraftType: "Boeing 737-8 MAX", season: "Week 16 - Week 40", frequency: "Sat" },
+    { from: "BGO", to: "RHO", flightTime: "04:20", seasonal: true, seasonStart: "April", seasonEnd: "October", startWeek: 16, endWeek: 40, aircraftType: "Boeing 737-8 MAX", season: "Week 16 - Week 40", frequency: "Sat" },
 
     // SVG
     { from: "SVG", to: "LHR" , flightTime: "01:50", aircraftType: "Boeing 737-8 MAX" , season: "Year-round" , frequency: "Mon · Tue · Wed · Thu · Fri · Sun" },
@@ -2675,7 +2689,8 @@ const routes = [
     { from: "SVG", to: "ARN" , flightTime: "01:25", aircraftType: "Bombardier CRJ" , season: "Year-round" , frequency: "Mon · Wed · Fri · Sun" },
     { from: "SVG", to: "CPH" , flightTime: "01:15", aircraftType: "Bombardier CRJ" , season: "Year-round" , frequency: "Mon · Tue · Wed · Thu · Fri · Sun" },
     { from: "SVG", to: "NCL" , flightTime: "01:20", aircraftType: "Bombardier CRJ" , season: "Year-round" , frequency: "Tue · Thu · Sun" },
-    { from: "SVG", to: "LPA" , flightTime: "05:25", seasonal: true, seasonStart: "October", seasonEnd: "April", aircraftType: "Boeing 737-8 MAX" , season: "October - April" , frequency: "Sat" , flightType: "Combined flight" },
+    { from: "SVG", to: "LPA" , flightTime: "05:25", seasonal: true, seasonStart: "October", seasonEnd: "April", aircraftType: "Boeing 737-8 MAX" , startWeek: 42, endWeek: 15, season: "October - April" , frequency: "Sat" , flightType: "Combined flight" },
+    { from: "SVG", to: "NCE", flightTime: "02:45", seasonal: true, startWeek: 16, endWeek: 40, season: "Week 16 - Week 40", aircraftType: "Boeing 737-8 MAX", frequency: "Sat" },
     { from: "SVG", to: "TRD" , flightTime: "01:10", aircraftType: "Bombardier CRJ" , season: "Year-round" , frequency: "Daily" },
 
     // Other routes
@@ -2690,26 +2705,26 @@ const routes = [
     { from: "BOO", to: "TRD" , flightTime: "01:00", aircraftType: "Bombardier CRJ" , season: "Year-round" , frequency: "Daily" },
     { from: "TOS", to: "TRD" , flightTime: "02:10", aircraftType: "Bombardier CRJ" , season: "Year-round" , frequency: "Daily" }
 ,
-    { from: "TRD", to: "LPA", flightTime: "06:00", aircraftType: "Boeing 737-8 MAX", season: "October - April", frequency: "Sun" , flightType: "Combined flight" }
+    { from: "TRD", to: "LPA", flightTime: "06:00", aircraftType: "Boeing 737-8 MAX", startWeek: 42, endWeek: 15, season: "October - April", frequency: "Sun" , flightType: "Combined flight" }
 ,
-    { from: "LPA", to: "ORB", flightTime: "05:45", aircraftType: "Boeing 737-8 MAX", season: "October - April", frequency: "Fri" , flightType: "Combined flight" }
+    { from: "LPA", to: "ORB", flightTime: "05:45", aircraftType: "Boeing 737-8 MAX", startWeek: 42, endWeek: 15, season: "October - April", frequency: "Fri" , flightType: "Combined flight" }
 ,
-    { from: "LPA", to: "TRF", flightTime: "05:35", aircraftType: "Boeing 737-8 MAX", season: "October - April", frequency: "Sat" , flightType: "Combined flight" }
+    { from: "LPA", to: "TRF", flightTime: "05:35", aircraftType: "Boeing 737-8 MAX", startWeek: 42, endWeek: 15, season: "October - April", frequency: "Sat" , flightType: "Combined flight" }
 ,
-    { from: "TFS", to: "GOT", flightTime: "05:30", aircraftType: "Boeing 737-8 MAX", season: "October - April", frequency: "Sat" , flightType: "Combined flight" }
+    { from: "TFS", to: "GOT", flightTime: "05:30", aircraftType: "Boeing 737-8 MAX", startWeek: 42, endWeek: 15, season: "October - April", frequency: "Sat" , flightType: "Combined flight" }
 ,
     { from: "GOT", to: "CHQ", startsMonth: "April", startsYear: 2027 },
 
-    { from: "LPA", to: "AES", flightTime: "05:40", aircraftType: "Boeing 737-8 MAX", season: "October - April", frequency: "Thu", flightType: "Combined flight" }
+    { from: "LPA", to: "AES", flightTime: "05:40", aircraftType: "Boeing 737-8 MAX", startWeek: 42, endWeek: 15, season: "October - April", frequency: "Thu", flightType: "Combined flight" }
 ,
-    { from: "BGO", to: "TFS", flightTime: "05:25", aircraftType: "Boeing 737-8 MAX", season: "October - April", frequency: "Sun", flightType: "Combined flight" }
+    { from: "BGO", to: "TFS", flightTime: "05:25", aircraftType: "Boeing 737-8 MAX", startWeek: 42, endWeek: 15, season: "October - April", frequency: "Sun", flightType: "Combined flight" }
 ,
     { from: "TOS", to: "ANX", flightTime: "00:25", aircraftType: "Bombardier CRJ", season: "Year-round", frequency: "Mon · Tue · Wed · Thu · Fri", flightType: "Regular flight" }
 ,
     { from: "TOS", to: "ARN", flightTime: "02:00", aircraftType: "Bombardier CRJ", season: "Year-round", frequency: "Tue · Thu · Sun", flightType: "Regular flight" }
 ,
-    { from: "LPA", to: "AAL", flightTime: "05:20", aircraftType: "Boeing 737-8 MAX", season: "October - April", frequency: "Mon", flightType: "Combined flight" },
-    { from: "SVG", to: "TFS" , flightTime: "05:20", seasonal: true, seasonStart: "October", seasonEnd: "April", aircraftType: "Boeing 737-8 MAX" , season: "October - April" , frequency: "Sat" , flightType: "Combined flight", startWeek: 40 }
+    { from: "LPA", to: "AAL", flightTime: "05:20", aircraftType: "Boeing 737-8 MAX", startWeek: 42, endWeek: 15, season: "October - April", frequency: "Mon", flightType: "Combined flight" },
+    { from: "SVG", to: "TFS" , flightTime: "05:20", seasonal: true, seasonStart: "October", seasonEnd: "April", aircraftType: "Boeing 737-8 MAX" , startWeek: 42, endWeek: 15, season: "October - April" , frequency: "Sat" , flightType: "Combined flight" }
 ];
 
 
@@ -3160,8 +3175,87 @@ function selectRoute(originCode, destinationCode) {
     const startsText = currentRoute?.startsText || `Starts in ${startsMonth} ${startsYear}`;
     const startsInFuture = !isSeasonalWinterRoute() && !hasAnySchedule;
 
+function getIsoWeekMonday(isoYear, isoWeek) {
+    const jan4 = new Date(Date.UTC(isoYear, 0, 4));
+    const jan4Day = jan4.getUTCDay() || 7;
+    const monday = new Date(jan4);
+    monday.setUTCDate(jan4.getUTCDate() - (jan4Day - 1) + (isoWeek - 1) * 7);
+    return monday;
+}
+
+function getRouteOperatingMonthRange() {
+    const directions = [
+        getScheduleDirectionData("outbound"),
+        getScheduleDirectionData("inbound")
+    ].filter(Boolean);
+
+    const seasonalFlights = [];
+    directions.forEach(data => {
+        scheduleWeekdayNames.forEach(day => {
+            (data[day] || []).forEach(flight => {
+                if (flight && flight.startWeek != null && flight.endWeek != null) {
+                    seasonalFlights.push(flight);
+                }
+            });
+        });
+    });
+
+    if (!seasonalFlights.length) return null;
+
+    const startWeek = Math.min(...seasonalFlights.map(f => Number(f.startWeek)));
+    const endWeek = Math.max(...seasonalFlights.map(f => Number(f.endWeek)));
+    if (!Number.isFinite(startWeek) || !Number.isFinite(endWeek)) return null;
+
+    const today = getScheduleToday();
+    const candidateYears = [today.year - 1, today.year, today.year + 1];
+    let bestRange = null;
+
+    for (const startIsoYear of candidateYears) {
+        const seasonStart = getIsoWeekMonday(startIsoYear, startWeek);
+        const endIsoYear = startWeek > endWeek ? startIsoYear + 1 : startIsoYear;
+        const seasonEnd = getIsoWeekMonday(endIsoYear, endWeek);
+        seasonEnd.setUTCDate(seasonEnd.getUTCDate() + 6);
+
+        let firstDeparture = null;
+        let lastDeparture = null;
+
+        for (let cursor = new Date(seasonStart); cursor <= seasonEnd; cursor.setUTCDate(cursor.getUTCDate() + 1)) {
+            const localDate = new Date(cursor.getUTCFullYear(), cursor.getUTCMonth(), cursor.getUTCDate());
+            const weekdayIndex = (cursor.getUTCDay() + 6) % 7;
+            const weekday = scheduleWeekdayNames[weekdayIndex];
+            const hasDeparture = directions.some(data =>
+                (data[weekday] || []).some(flight => isScheduleActiveForDate(flight, localDate))
+            );
+
+            if (hasDeparture) {
+                if (!firstDeparture) firstDeparture = new Date(cursor);
+                lastDeparture = new Date(cursor);
+            }
+        }
+
+        if (firstDeparture && lastDeparture) {
+            const distance = Math.abs(startIsoYear - today.year);
+            if (!bestRange || distance < bestRange.distance) {
+                bestRange = { firstDeparture, lastDeparture, distance };
+            }
+        }
+    }
+
+    if (!bestRange) return null;
+
+    return {
+        startMonth: scheduleMonthNames[bestRange.firstDeparture.getUTCMonth()],
+        endMonth: scheduleMonthNames[bestRange.lastDeparture.getUTCMonth()]
+    };
+}
+
     if (isSeasonalWinterRoute()) {
-        routeComments.push("Operating from October to April");
+        const seasonRange = getRouteOperatingMonthRange();
+        routeComments.push(
+            seasonRange
+                ? `Operating from ${seasonRange.startMonth} to ${seasonRange.endMonth}`
+                : "Operating seasonally"
+        );
         document.getElementById("info-panel").classList.remove("route-no-season", "route-starts-april");
     } else if (startsInFuture) {
         document.getElementById("info-panel").classList.add("route-no-season", "route-starts-april");
@@ -3248,7 +3342,7 @@ function getAirportTodaySchedule(code, dayOffset = 0) {
         september: 8, october: 9, november: 10, december: 11
     };
 
-    const isFlightOperatingOnDate = (originCode, destinationCode, flightDate) => {
+    const isFlightOperatingOnDate = (originCode, destinationCode, flightDate, flightDetails = null) => {
         const route = routes.find(r =>
             (r.from === originCode && r.to === destinationCode) ||
             (r.from === destinationCode && r.to === originCode)
@@ -3259,7 +3353,7 @@ function getAirportTodaySchedule(code, dayOffset = 0) {
         const year = flightDate.getUTCFullYear();
         const month = flightDate.getUTCMonth();
 
-        // Routes with an explicit future start date do not operate before it.
+        // Explicit future start dates are checked first.
         if (route.startsYear != null && route.startsMonth) {
             const startMonth = monthNumbers[String(route.startsMonth).toLowerCase()];
             if (startMonth != null) {
@@ -3269,27 +3363,49 @@ function getAirportTodaySchedule(code, dayOffset = 0) {
             }
         }
 
-        const seasonText = String(route.season || "").trim().toLowerCase();
-        if (!seasonText || seasonText === "year-round") return true;
+        // Individual flights are authoritative when they carry explicit
+        // operating-week limits. This is essential for routes that combine
+        // year-round service with seasonal additional capacity.
+        const hasFlightLevelWeeks =
+            flightDetails &&
+            (flightDetails.startWeek != null || flightDetails.endWeek != null);
 
-        const range = seasonText.match(/^([a-z]+)\s*-\s*([a-z]+)$/);
-        if (!range) return true;
-
-        const startMonth = monthNumbers[range[1]];
-        const endMonth = monthNumbers[range[2]];
-        if (startMonth == null || endMonth == null) return true;
-
-        // Normal season, e.g. April-August.
-        if (startMonth <= endMonth) {
-            return month >= startMonth && month <= endMonth;
+        if (hasFlightLevelWeeks) {
+            return isScheduleActiveForDate(flightDetails, flightDate);
         }
 
-        // Winter season crossing New Year, e.g. October-April.
-        return month >= startMonth || month <= endMonth;
+        // Fall back to route-level metadata only for legacy timetable rows
+        // that do not yet carry their own operating-week fields.
+        if (route.startWeek != null && route.endWeek != null &&
+            !isScheduleActiveForDate(route, flightDate)) {
+            return false;
+        }
+
+        const seasonText = String(route.season || "").trim().toLowerCase();
+        if (seasonText && seasonText !== "year-round") {
+            const range = seasonText.match(/^([a-z]+)\s*-\s*([a-z]+)$/);
+
+            if (range) {
+                const startMonth = monthNumbers[range[1]];
+                const endMonth = monthNumbers[range[2]];
+
+                if (startMonth != null && endMonth != null) {
+                    if (startMonth <= endMonth) {
+                        if (!(month >= startMonth && month <= endMonth)) return false;
+                    } else {
+                        if (!(month >= startMonth || month <= endMonth)) return false;
+                    }
+                }
+            }
+        }
+
+        return true;
+
+        return true;
     };
 
-    const addFlight = (originCode, destinationCode, flight, timeRange, via) => {
-        if (!isFlightOperatingOnDate(originCode, destinationCode, date)) return;
+    const addFlight = (originCode, destinationCode, flight, timeRange, via, flightDetails = null) => {
+        if (!isFlightOperatingOnDate(originCode, destinationCode, date, flightDetails)) return;
 
         const parts = String(timeRange || "").split(/\s*-\s*/);
         const departureTime = parts[0] || "";
@@ -3330,11 +3446,11 @@ function getAirportTodaySchedule(code, dayOffset = 0) {
         const [a, b] = key.split("-");
 
         (schedule.outbound?.[weekday] || []).forEach(flight => {
-            (flight.times || []).forEach(time => addFlight(a, b, flight.flight, time));
+            (flight.times || []).forEach(time => addFlight(a, b, flight.flight, time, undefined, flight));
         });
 
         (schedule.inbound?.[weekday] || []).forEach(flight => {
-            (flight.times || []).forEach(time => addFlight(b, a, flight.flight, time));
+            (flight.times || []).forEach(time => addFlight(b, a, flight.flight, time, undefined, flight));
         });
     });
 
@@ -3343,11 +3459,11 @@ function getAirportTodaySchedule(code, dayOffset = 0) {
         const [a, b] = key.split("-");
 
         (schedule.outbound?.[weekday] || []).forEach(flight => {
-            (flight.times || []).forEach(time => addFlight(a, b, flight.flight, time));
+            (flight.times || []).forEach(time => addFlight(a, b, flight.flight, time, undefined, flight));
         });
 
         (schedule.inbound?.[weekday] || []).forEach(flight => {
-            (flight.times || []).forEach(time => addFlight(b, a, flight.flight, time));
+            (flight.times || []).forEach(time => addFlight(b, a, flight.flight, time, undefined, flight));
         });
     });
 
@@ -3356,11 +3472,11 @@ function getAirportTodaySchedule(code, dayOffset = 0) {
         const [a, b] = key.split("-");
 
         (schedule.outbound?.[weekday] || []).forEach(flight => {
-            (flight.times || []).forEach(time => addFlight(a, b, flight.flight, time));
+            (flight.times || []).forEach(time => addFlight(a, b, flight.flight, time, undefined, flight));
         });
 
         (schedule.inbound?.[weekday] || []).forEach(flight => {
-            (flight.times || []).forEach(time => addFlight(b, a, flight.flight, time));
+            (flight.times || []).forEach(time => addFlight(b, a, flight.flight, time, undefined, flight));
         });
     });
 
@@ -3388,11 +3504,11 @@ function getAirportTodaySchedule(code, dayOffset = 0) {
         const [a, b] = key.split("-");
 
         (schedule.outbound?.[weekday] || []).forEach(flight => {
-            (flight.times || []).forEach(time => addFlight(a, b, flight.flight, time));
+            (flight.times || []).forEach(time => addFlight(a, b, flight.flight, time, undefined, flight));
         });
 
         (schedule.inbound?.[weekday] || []).forEach(flight => {
-            (flight.times || []).forEach(time => addFlight(b, a, flight.flight, time));
+            (flight.times || []).forEach(time => addFlight(b, a, flight.flight, time, undefined, flight));
         });
     });
 
@@ -4153,303 +4269,327 @@ window.resetMap = resetMap;
 
 const tosSchedules = {
     "OSL-TOS": {
-    "inbound": {
-        "Monday": [
-            {
-                "times": [
-                    "06:05 - 08:05"
-                ],
-                "flight": "2B162 / B38M"
-            },
-            {
-                "times": [
-                    "11:30 - 13:30"
-                ],
-                "flight": "2B164 / B38M"
-            },
-            {
-                "times": [
-                    "17:20 - 19:20"
-                ],
-                "flight": "2B168 / B38M"
-            },
-            {
-                "times": [
-                    "21:10 - 23:10"
-                ],
-                "flight": "2B170 / B38M"
-            }
-        ],
-        "Tuesday": [
-            {
-                "times": [
-                    "06:05 - 08:05"
-                ],
-                "flight": "2B162 / B38M"
-            },
-            {
-                "times": [
-                    "11:30 - 13:30"
-                ],
-                "flight": "2B164 / B38M"
-            },
-            {
-                "times": [
-                    "17:20 - 19:20"
-                ],
-                "flight": "2B168 / B38M"
-            }
-        ],
-        "Wednesday": [
-            {
-                "times": [
-                    "06:05 - 08:05"
-                ],
-                "flight": "2B162 / B38M"
-            },
-            {
-                "times": [
-                    "11:30 - 13:30"
-                ],
-                "flight": "2B164 / B38M"
-            },
-            {
-                "times": [
-                    "17:20 - 19:20"
-                ],
-                "flight": "2B168 / B38M"
-            },
-            {
-                "times": [
-                    "21:10 - 23:10"
-                ],
-                "flight": "2B170 / B38M"
-            }
-        ],
-        "Thursday": [
-            {
-                "times": [
-                    "06:05 - 08:05"
-                ],
-                "flight": "2B162 / B38M"
-            },
-            {
-                "times": [
-                    "11:30 - 13:30"
-                ],
-                "flight": "2B164 / B38M"
-            },
-            {
-                "times": [
-                    "17:20 - 19:20"
-                ],
-                "flight": "2B168 / B38M"
-            }
-        ],
-        "Friday": [
-            {
-                "times": [
-                    "06:05 - 08:05"
-                ],
-                "flight": "2B162 / B38M"
-            },
-            {
-                "times": [
-                    "11:30 - 13:30"
-                ],
-                "flight": "2B164 / B38M"
-            },
-            {
-                "times": [
-                    "17:20 - 19:20"
-                ],
-                "flight": "2B168 / B38M"
-            },
-            {
-                "times": [
-                    "21:10 - 23:10"
-                ],
-                "flight": "2B170 / B38M"
-            }
-        ],
-        "Saturday": [
-            {
-                "times": [
-                    "06:05 - 08:05"
-                ],
-                "flight": "2B162 / B38M"
-            },
-            {
-                "times": [
-                    "08:50 - 10:50"
-                ],
-                "flight": "2B164 / CRJ7"
-            }
-        ],
-        "Sunday": [
-            {
-                "times": [
-                    "11:50 - 13:50"
-                ],
-                "flight": "2B164 / CRJ9"
-            },
-            {
-                "times": [
-                    "19:10 - 21:10"
-                ],
-                "flight": "2B168 / B38M"
-            }
-        ]
+        "outbound": {
+            "Monday": [
+                {
+                    "times": [
+                        "08:55 - 10:55"
+                    ],
+                    "flight": "2B163 / B38M"
+                },
+                {
+                    "times": [
+                        "14:45 - 16:45"
+                    ],
+                    "flight": "2B167 / B38M"
+                },
+                {
+                    "times": [
+                        "18:30 - 20:30"
+                    ],
+                    "flight": "2B169 / B38M"
+                },
+                {
+                    "times": [
+                        "20:15 - 22:15"
+                    ],
+                    "flight": "2B171 / B38M"
+                }
+            ],
+            "Tuesday": [
+                {
+                    "times": [
+                        "08:55 - 10:55"
+                    ],
+                    "flight": "2B163 / B38M"
+                },
+                {
+                    "times": [
+                        "14:45 - 16:45"
+                    ],
+                    "flight": "2B167 / B38M"
+                },
+                {
+                    "times": [
+                        "16:30 - 18:30"
+                    ],
+                    "flight": "2B169 / B38M"
+                },
+                {
+                    "times": [
+                        "20:15 - 22:15"
+                    ],
+                    "flight": "2B171 / B38M"
+                }
+            ],
+            "Wednesday": [
+                {
+                    "times": [
+                        "08:55 - 10:55"
+                    ],
+                    "flight": "2B163 / B38M"
+                },
+                {
+                    "times": [
+                        "14:45 - 16:45"
+                    ],
+                    "flight": "2B167 / B38M"
+                },
+                {
+                    "times": [
+                        "18:30 - 20:30"
+                    ],
+                    "flight": "2B169 / B38M"
+                },
+                {
+                    "times": [
+                        "20:15 - 22:15"
+                    ],
+                    "flight": "2B171 / B38M"
+                }
+            ],
+            "Thursday": [
+                {
+                    "times": [
+                        "08:55 - 10:55"
+                    ],
+                    "flight": "2B163 / B38M"
+                },
+                {
+                    "times": [
+                        "14:45 - 16:45"
+                    ],
+                    "flight": "2B167 / B38M"
+                },
+                {
+                    "times": [
+                        "16:30 - 18:30"
+                    ],
+                    "flight": "2B169 / B38M"
+                },
+                {
+                    "times": [
+                        "20:15 - 22:15"
+                    ],
+                    "flight": "2B171 / B38M"
+                }
+            ],
+            "Friday": [
+                {
+                    "times": [
+                        "08:55 - 10:55"
+                    ],
+                    "flight": "2B163 / B38M"
+                },
+                {
+                    "times": [
+                        "14:45 - 16:45"
+                    ],
+                    "flight": "2B167 / B38M"
+                },
+                {
+                    "times": [
+                        "18:30 - 20:30"
+                    ],
+                    "flight": "2B169 / B38M"
+                },
+                {
+                    "times": [
+                        "20:15 - 22:15"
+                    ],
+                    "flight": "2B171 / B38M"
+                }
+            ],
+            "Saturday": [
+                {
+                    "times": [
+                        "11:30 - 13:30"
+                    ],
+                    "flight": "2B165 / CRJ7"
+                }
+            ],
+            "Sunday": [
+                {
+                    "times": [
+                        "09:10 - 11:10"
+                    ],
+                    "flight": "2B163 / CRJ9"
+                },
+                {
+                    "times": [
+                        "16:30 - 18:30"
+                    ],
+                    "flight": "2B167 / B38M"
+                },
+                {
+                    "times": [
+                        "20:40 - 22:40"
+                    ],
+                    "flight": "2B171 / B38M"
+                }
+            ]
+        },
+        "inbound": {
+            "Monday": [
+                {
+                    "times": [
+                        "06:05 - 08:05"
+                    ],
+                    "flight": "2B162 / B38M"
+                },
+                {
+                    "times": [
+                        "11:30 - 13:30"
+                    ],
+                    "flight": "2B164 / B38M"
+                },
+                {
+                    "times": [
+                        "17:20 - 19:20"
+                    ],
+                    "flight": "2B168 / B38M"
+                },
+                {
+                    "times": [
+                        "21:10 - 23:10"
+                    ],
+                    "flight": "2B170 / B38M"
+                }
+            ],
+            "Tuesday": [
+                {
+                    "times": [
+                        "06:05 - 08:05"
+                    ],
+                    "flight": "2B162 / B38M"
+                },
+                {
+                    "times": [
+                        "11:30 - 13:30"
+                    ],
+                    "flight": "2B164 / B38M"
+                },
+                {
+                    "times": [
+                        "17:20 - 19:20"
+                    ],
+                    "flight": "2B168 / B38M"
+                },
+                {
+                    "times": [
+                        "19:10 - 21:10"
+                    ],
+                    "flight": "2B170 / B38M"
+                }
+            ],
+            "Wednesday": [
+                {
+                    "times": [
+                        "06:05 - 08:05"
+                    ],
+                    "flight": "2B162 / B38M"
+                },
+                {
+                    "times": [
+                        "11:30 - 13:30"
+                    ],
+                    "flight": "2B164 / B38M"
+                },
+                {
+                    "times": [
+                        "17:20 - 19:20"
+                    ],
+                    "flight": "2B168 / B38M"
+                },
+                {
+                    "times": [
+                        "21:10 - 23:10"
+                    ],
+                    "flight": "2B170 / B38M"
+                }
+            ],
+            "Thursday": [
+                {
+                    "times": [
+                        "06:05 - 08:05"
+                    ],
+                    "flight": "2B162 / B38M"
+                },
+                {
+                    "times": [
+                        "11:30 - 13:30"
+                    ],
+                    "flight": "2B164 / B38M"
+                },
+                {
+                    "times": [
+                        "17:20 - 19:20"
+                    ],
+                    "flight": "2B168 / B38M"
+                },
+                {
+                    "times": [
+                        "19:10 - 21:10"
+                    ],
+                    "flight": "2B170 / B38M"
+                }
+            ],
+            "Friday": [
+                {
+                    "times": [
+                        "06:05 - 08:05"
+                    ],
+                    "flight": "2B162 / B38M"
+                },
+                {
+                    "times": [
+                        "11:30 - 13:30"
+                    ],
+                    "flight": "2B164 / B38M"
+                },
+                {
+                    "times": [
+                        "17:20 - 19:20"
+                    ],
+                    "flight": "2B168 / B38M"
+                },
+                {
+                    "times": [
+                        "21:10 - 23:10"
+                    ],
+                    "flight": "2B170 / B38M"
+                }
+            ],
+            "Saturday": [
+                {
+                    "times": [
+                        "06:05 - 08:05"
+                    ],
+                    "flight": "2B162 / B38M"
+                },
+                {
+                    "times": [
+                        "08:50 - 10:50"
+                    ],
+                    "flight": "2B164 / CRJ7"
+                }
+            ],
+            "Sunday": [
+                {
+                    "times": [
+                        "11:50 - 13:50"
+                    ],
+                    "flight": "2B164 / CRJ9"
+                },
+                {
+                    "times": [
+                        "19:10 - 21:10"
+                    ],
+                    "flight": "2B168 / B38M"
+                }
+            ]
+        }
     },
-    "outbound": {
-        "Monday": [
-            {
-                "times": [
-                    "08:55 - 10:55"
-                ],
-                "flight": "2B163 / B38M"
-            },
-            {
-                "times": [
-                    "14:45 - 16:45"
-                ],
-                "flight": "2B167 / B38M"
-            },
-            {
-                "times": [
-                    "18:30 - 20:30"
-                ],
-                "flight": "2B169 / B38M"
-            },
-            {
-                "times": [
-                    "20:15 - 22:15"
-                ],
-                "flight": "2B171 / B38M"
-            }
-        ],
-        "Tuesday": [
-            {
-                "times": [
-                    "08:55 - 10:55"
-                ],
-                "flight": "2B163 / B38M"
-            },
-            {
-                "times": [
-                    "14:45 - 16:45"
-                ],
-                "flight": "2B167 / B38M"
-            },
-            {
-                "times": [
-                    "20:15 - 22:15"
-                ],
-                "flight": "2B171 / B38M"
-            }
-        ],
-        "Wednesday": [
-            {
-                "times": [
-                    "08:55 - 10:55"
-                ],
-                "flight": "2B163 / B38M"
-            },
-            {
-                "times": [
-                    "14:45 - 16:45"
-                ],
-                "flight": "2B167 / B38M"
-            },
-            {
-                "times": [
-                    "18:30 - 20:30"
-                ],
-                "flight": "2B169 / B38M"
-            },
-            {
-                "times": [
-                    "20:15 - 22:15"
-                ],
-                "flight": "2B171 / B38M"
-            }
-        ],
-        "Thursday": [
-            {
-                "times": [
-                    "08:55 - 10:55"
-                ],
-                "flight": "2B163 / B38M"
-            },
-            {
-                "times": [
-                    "14:45 - 16:45"
-                ],
-                "flight": "2B167 / B38M"
-            },
-            {
-                "times": [
-                    "20:15 - 22:15"
-                ],
-                "flight": "2B171 / B38M"
-            }
-        ],
-        "Friday": [
-            {
-                "times": [
-                    "08:55 - 10:55"
-                ],
-                "flight": "2B163 / B38M"
-            },
-            {
-                "times": [
-                    "14:45 - 16:45"
-                ],
-                "flight": "2B167 / B38M"
-            },
-            {
-                "times": [
-                    "18:30 - 20:30"
-                ],
-                "flight": "2B169 / B38M"
-            },
-            {
-                "times": [
-                    "20:15 - 22:15"
-                ],
-                "flight": "2B171 / B38M"
-            }
-        ],
-        "Saturday": [
-            {
-                "times": [
-                    "11:30 - 13:30"
-                ],
-                "flight": "2B165 / CRJ7"
-            }
-        ],
-        "Sunday": [
-            {
-                "times": [
-                    "09:10 - 11:10"
-                ],
-                "flight": "2B163 / CRJ9"
-            },
-            {
-                "times": [
-                    "16:30 - 18:30"
-                ],
-                "flight": "2B167 / B38M"
-            },
-            {
-                "times": [
-                    "20:40 - 22:40"
-                ],
-                "flight": "2B171 / B38M"
-            }
-        ]
-    }
-},
 
     "TOS-BGO": {
         outbound: {
@@ -5799,7 +5939,7 @@ const additionalSchedules = {
                 "times": [
                     "09:15 - 10:10"
                 ],
-                "flight": "5B105 / CRJ9"
+                "flight": "2B105 / CRJ9"
             },
             {
                 "times": [
@@ -6163,573 +6303,585 @@ const additionalSchedules = {
     }
 },
     "OSL-SVG": {
-    "outbound": {
-        "Monday": [
-            {
-                "times": [
-                    "07:50 - 08:45"
-                ],
-                "flight": "2B123 / CRJ9"
-            },
-            {
-                "times": [
-                    "08:50 - 09:45"
-                ],
-                "flight": "2B125 / B38M"
-            },
-            {
-                "times": [
-                    "12:20 - 13:15"
-                ],
-                "flight": "2B127 / B38M"
-            },
-            {
-                "times": [
-                    "15:50 - 16:45"
-                ],
-                "flight": "2B131 / B38M"
-            },
-            {
-                "times": [
-                    "17:20 - 18:15"
-                ],
-                "flight": "2B133 / B38M"
-            },
-            {
-                "times": [
-                    "18:25 - 19:20"
-                ],
-                "flight": "2B135 / CRJ9"
-            },
-            {
-                "times": [
-                    "20:45 - 21:40"
-                ],
-                "flight": "2B137 / CRJ9"
-            }
-        ],
-        "Tuesday": [
-            {
-                "times": [
-                    "07:50 - 08:45"
-                ],
-                "flight": "2B123 / CRJ9"
-            },
-            {
-                "times": [
-                    "08:50 - 09:45"
-                ],
-                "flight": "2B125 / B38M"
-            },
-            {
-                "times": [
-                    "12:20 - 13:15"
-                ],
-                "flight": "2B127 / B38M"
-            },
-            {
-                "times": [
-                    "15:50 - 16:45"
-                ],
-                "flight": "2B131 / B38M"
-            },
-            {
-                "times": [
-                    "17:20 - 18:15"
-                ],
-                "flight": "2B133 / B38M"
-            },
-            {
-                "times": [
-                    "18:25 - 19:20"
-                ],
-                "flight": "2B135 / CRJ9"
-            },
-            {
-                "times": [
-                    "20:45 - 21:40"
-                ],
-                "flight": "2B137 / CRJ9"
-            }
-        ],
-        "Wednesday": [
-            {
-                "times": [
-                    "07:50 - 08:45"
-                ],
-                "flight": "2B123 / CRJ9"
-            },
-            {
-                "times": [
-                    "08:50 - 09:45"
-                ],
-                "flight": "2B125 / B38M"
-            },
-            {
-                "times": [
-                    "12:20 - 13:15"
-                ],
-                "flight": "2B127 / B38M"
-            },
-            {
-                "times": [
-                    "15:50 - 16:45"
-                ],
-                "flight": "2B131 / B38M"
-            },
-            {
-                "times": [
-                    "17:20 - 18:15"
-                ],
-                "flight": "2B133 / B38M"
-            },
-            {
-                "times": [
-                    "18:25 - 19:20"
-                ],
-                "flight": "2B135 / CRJ9"
-            },
-            {
-                "times": [
-                    "20:45 - 21:40"
-                ],
-                "flight": "2B137 / CRJ9"
-            }
-        ],
-        "Thursday": [
-            {
-                "times": [
-                    "07:50 - 08:45"
-                ],
-                "flight": "2B123 / CRJ9"
-            },
-            {
-                "times": [
-                    "08:50 - 09:45"
-                ],
-                "flight": "2B125 / B38M"
-            },
-            {
-                "times": [
-                    "12:20 - 13:15"
-                ],
-                "flight": "2B127 / B38M"
-            },
-            {
-                "times": [
-                    "15:50 - 16:45"
-                ],
-                "flight": "2B131 / B38M"
-            },
-            {
-                "times": [
-                    "17:20 - 18:15"
-                ],
-                "flight": "2B133 / B38M"
-            },
-            {
-                "times": [
-                    "18:25 - 19:20"
-                ],
-                "flight": "2B135 / CRJ9"
-            },
-            {
-                "times": [
-                    "20:45 - 21:40"
-                ],
-                "flight": "2B137 / CRJ9"
-            }
-        ],
-        "Friday": [
-            {
-                "times": [
-                    "07:50 - 08:45"
-                ],
-                "flight": "2B123 / CRJ9"
-            },
-            {
-                "times": [
-                    "08:50 - 09:45"
-                ],
-                "flight": "2B125 / B38M"
-            },
-            {
-                "times": [
-                    "12:20 - 13:15"
-                ],
-                "flight": "2B127 / B38M"
-            },
-            {
-                "times": [
-                    "15:50 - 16:45"
-                ],
-                "flight": "2B131 / B38M"
-            },
-            {
-                "times": [
-                    "17:20 - 18:15"
-                ],
-                "flight": "2B133 / B38M"
-            },
-            {
-                "times": [
-                    "18:25 - 19:20"
-                ],
-                "flight": "2B135 / CRJ9"
-            },
-            {
-                "times": [
-                    "20:45 - 21:40"
-                ],
-                "flight": "2B137 / CRJ9"
-            }
-        ],
-        "Saturday": [
-            {
-                "times": [
-                    "07:30 - 08:25"
-                ],
-                "flight": "2B123 / B38M"
-            },
-            {
-                "times": [
-                    "10:10 - 11:05"
-                ],
-                "flight": "2B125 / CRJ9"
-            },
-            {
-                "times": [
-                    "15:10 - 16:05"
-                ],
-                "flight": "2B131 / CRJ9"
-            },
-            {
-                "times": [
-                    "18:10 - 19:05"
-                ],
-                "flight": "2B133 / CRJ9"
-            }
-        ],
-        "Sunday": [
-            {
-                "times": [
-                    "08:35 - 09:30"
-                ],
-                "flight": "2B123 / CRJ9"
-            },
-            {
-                "times": [
-                    "11:50 - 12:45"
-                ],
-                "flight": "2B127 / CRJ9"
-            },
-            {
-                "times": [
-                    "17:20 - 18:15"
-                ],
-                "flight": "2B133 / B38M"
-            },
-            {
-                "times": [
-                    "18:50 - 19:45"
-                ],
-                "flight": "2B135 / CRJ9"
-            },
-            {
-                "times": [
-                    "19:45 - 20:40"
-                ],
-                "flight": "2B137 / B38M"
-            }
-        ]
+        "outbound": {
+            "Monday": [
+                {
+                    "times": [
+                        "07:50 - 08:45"
+                    ],
+                    "flight": "2B123 / CRJ9"
+                },
+                {
+                    "times": [
+                        "08:50 - 09:45"
+                    ],
+                    "flight": "2B125 / B38M"
+                },
+                {
+                    "times": [
+                        "12:20 - 13:15"
+                    ],
+                    "flight": "2B127 / B38M"
+                },
+                {
+                    "times": [
+                        "15:50 - 16:45"
+                    ],
+                    "flight": "2B131 / B38M"
+                },
+                {
+                    "times": [
+                        "17:20 - 18:15"
+                    ],
+                    "flight": "2B133 / B38M"
+                },
+                {
+                    "times": [
+                        "18:25 - 19:20"
+                    ],
+                    "flight": "2B135 / CRJ9"
+                },
+                {
+                    "times": [
+                        "20:45 - 21:40"
+                    ],
+                    "flight": "2B137 / CRJ9"
+                }
+            ],
+            "Tuesday": [
+                {
+                    "times": [
+                        "07:50 - 08:45"
+                    ],
+                    "flight": "2B123 / CRJ9"
+                },
+                {
+                    "times": [
+                        "08:50 - 09:45"
+                    ],
+                    "flight": "2B125 / B38M"
+                },
+                {
+                    "times": [
+                        "12:20 - 13:15"
+                    ],
+                    "flight": "2B127 / B38M"
+                },
+                {
+                    "times": [
+                        "15:50 - 16:45"
+                    ],
+                    "flight": "2B131 / B38M"
+                },
+                {
+                    "times": [
+                        "17:20 - 18:15"
+                    ],
+                    "flight": "2B133 / B38M"
+                },
+                {
+                    "times": [
+                        "18:25 - 19:20"
+                    ],
+                    "flight": "2B135 / CRJ9"
+                },
+                {
+                    "times": [
+                        "20:45 - 21:40"
+                    ],
+                    "flight": "2B137 / CRJ9"
+                }
+            ],
+            "Wednesday": [
+                {
+                    "times": [
+                        "07:50 - 08:45"
+                    ],
+                    "flight": "2B123 / CRJ9"
+                },
+                {
+                    "times": [
+                        "08:50 - 09:45"
+                    ],
+                    "flight": "2B125 / B38M"
+                },
+                {
+                    "times": [
+                        "12:20 - 13:15"
+                    ],
+                    "flight": "2B127 / B38M"
+                },
+                {
+                    "times": [
+                        "15:50 - 16:45"
+                    ],
+                    "flight": "2B131 / B38M"
+                },
+                {
+                    "times": [
+                        "17:20 - 18:15"
+                    ],
+                    "flight": "2B133 / B38M"
+                },
+                {
+                    "times": [
+                        "18:25 - 19:20"
+                    ],
+                    "flight": "2B135 / CRJ9"
+                },
+                {
+                    "times": [
+                        "20:45 - 21:40"
+                    ],
+                    "flight": "2B137 / CRJ9"
+                }
+            ],
+            "Thursday": [
+                {
+                    "times": [
+                        "07:50 - 08:45"
+                    ],
+                    "flight": "2B123 / CRJ9"
+                },
+                {
+                    "times": [
+                        "08:50 - 09:45"
+                    ],
+                    "flight": "2B125 / B38M"
+                },
+                {
+                    "times": [
+                        "12:20 - 13:15"
+                    ],
+                    "flight": "2B127 / B38M"
+                },
+                {
+                    "times": [
+                        "15:50 - 16:45"
+                    ],
+                    "flight": "2B131 / B38M"
+                },
+                {
+                    "times": [
+                        "17:20 - 18:15"
+                    ],
+                    "flight": "2B133 / B38M"
+                },
+                {
+                    "times": [
+                        "18:25 - 19:20"
+                    ],
+                    "flight": "2B135 / CRJ9"
+                },
+                {
+                    "times": [
+                        "20:45 - 21:40"
+                    ],
+                    "flight": "2B137 / CRJ9"
+                }
+            ],
+            "Friday": [
+                {
+                    "times": [
+                        "07:50 - 08:45"
+                    ],
+                    "flight": "2B123 / CRJ9"
+                },
+                {
+                    "times": [
+                        "08:50 - 09:45"
+                    ],
+                    "flight": "2B125 / B38M"
+                },
+                {
+                    "times": [
+                        "12:20 - 13:15"
+                    ],
+                    "flight": "2B127 / B38M"
+                },
+                {
+                    "times": [
+                        "15:50 - 16:45"
+                    ],
+                    "flight": "2B131 / B38M"
+                },
+                {
+                    "times": [
+                        "17:20 - 18:15"
+                    ],
+                    "flight": "2B133 / B38M"
+                },
+                {
+                    "times": [
+                        "18:25 - 19:20"
+                    ],
+                    "flight": "2B135 / CRJ9"
+                },
+                {
+                    "times": [
+                        "20:45 - 21:40"
+                    ],
+                    "flight": "2B137 / CRJ9"
+                }
+            ],
+            "Saturday": [
+                {
+                    "times": [
+                        "07:30 - 08:25"
+                    ],
+                    "flight": "2B123 / B38M"
+                },
+                {
+                    "times": [
+                        "10:10 - 11:05"
+                    ],
+                    "flight": "2B125 / CRJ9"
+                },
+                {
+                    "times": [
+                        "15:10 - 16:05"
+                    ],
+                    "flight": "2B131 / CRJ9"
+                },
+                {
+                    "times": [
+                        "18:10 - 19:05"
+                    ],
+                    "flight": "2B133 / CRJ9"
+                }
+            ],
+            "Sunday": [
+                {
+                    "times": [
+                        "08:35 - 09:30"
+                    ],
+                    "flight": "2B123 / CRJ9"
+                },
+                {
+                    "times": [
+                        "11:50 - 12:45"
+                    ],
+                    "flight": "2B127 / CRJ9"
+                },
+                {
+                    "times": [
+                        "14:30 - 15:25"
+                    ],
+                    "flight": "2B129 / B38M"
+                },
+                {
+                    "times": [
+                        "17:20 - 18:15"
+                    ],
+                    "flight": "2B133 / B38M"
+                },
+                {
+                    "times": [
+                        "18:50 - 19:45"
+                    ],
+                    "flight": "2B135 / CRJ9"
+                },
+                {
+                    "times": [
+                        "19:45 - 20:40"
+                    ],
+                    "flight": "2B137 / B38M"
+                }
+            ]
+        },
+        "inbound": {
+            "Monday": [
+                {
+                    "times": [
+                        "06:15 - 07:10"
+                    ],
+                    "flight": "2B122 / CRJ9"
+                },
+                {
+                    "times": [
+                        "07:10 - 08:05"
+                    ],
+                    "flight": "2B124 / B38M"
+                },
+                {
+                    "times": [
+                        "10:20 - 11:15"
+                    ],
+                    "flight": "2B126 / B38M"
+                },
+                {
+                    "times": [
+                        "13:50 - 14:45"
+                    ],
+                    "flight": "2B128 / B38M"
+                },
+                {
+                    "times": [
+                        "16:40 - 17:35"
+                    ],
+                    "flight": "2B130 / CRJ9"
+                },
+                {
+                    "times": [
+                        "17:15 - 18:10"
+                    ],
+                    "flight": "2B132 / B38M"
+                },
+                {
+                    "times": [
+                        "19:05 - 20:00"
+                    ],
+                    "flight": "2B136 / CRJ9"
+                }
+            ],
+            "Tuesday": [
+                {
+                    "times": [
+                        "06:15 - 07:10"
+                    ],
+                    "flight": "2B122 / CRJ9"
+                },
+                {
+                    "times": [
+                        "07:10 - 08:05"
+                    ],
+                    "flight": "2B124 / B38M"
+                },
+                {
+                    "times": [
+                        "10:20 - 11:15"
+                    ],
+                    "flight": "2B126 / B38M"
+                },
+                {
+                    "times": [
+                        "13:50 - 14:45"
+                    ],
+                    "flight": "2B128 / B38M"
+                },
+                {
+                    "times": [
+                        "16:40 - 17:35"
+                    ],
+                    "flight": "2B130 / CRJ9"
+                },
+                {
+                    "times": [
+                        "17:15 - 18:10"
+                    ],
+                    "flight": "2B132 / B38M"
+                },
+                {
+                    "times": [
+                        "19:05 - 20:00"
+                    ],
+                    "flight": "2B136 / CRJ9"
+                }
+            ],
+            "Wednesday": [
+                {
+                    "times": [
+                        "06:15 - 07:10"
+                    ],
+                    "flight": "2B122 / CRJ9"
+                },
+                {
+                    "times": [
+                        "07:10 - 08:05"
+                    ],
+                    "flight": "2B124 / B38M"
+                },
+                {
+                    "times": [
+                        "10:20 - 11:15"
+                    ],
+                    "flight": "2B126 / B38M"
+                },
+                {
+                    "times": [
+                        "13:50 - 14:45"
+                    ],
+                    "flight": "2B128 / B38M"
+                },
+                {
+                    "times": [
+                        "16:40 - 17:35"
+                    ],
+                    "flight": "2B130 / CRJ9"
+                },
+                {
+                    "times": [
+                        "17:15 - 18:10"
+                    ],
+                    "flight": "2B132 / B38M"
+                },
+                {
+                    "times": [
+                        "19:05 - 20:00"
+                    ],
+                    "flight": "2B136 / CRJ9"
+                }
+            ],
+            "Thursday": [
+                {
+                    "times": [
+                        "06:15 - 07:10"
+                    ],
+                    "flight": "2B122 / CRJ9"
+                },
+                {
+                    "times": [
+                        "07:10 - 08:05"
+                    ],
+                    "flight": "2B124 / B38M"
+                },
+                {
+                    "times": [
+                        "10:20 - 11:15"
+                    ],
+                    "flight": "2B126 / B38M"
+                },
+                {
+                    "times": [
+                        "13:50 - 14:45"
+                    ],
+                    "flight": "2B128 / B38M"
+                },
+                {
+                    "times": [
+                        "16:40 - 17:35"
+                    ],
+                    "flight": "2B130 / CRJ9"
+                },
+                {
+                    "times": [
+                        "17:15 - 18:10"
+                    ],
+                    "flight": "2B132 / B38M"
+                },
+                {
+                    "times": [
+                        "19:05 - 20:00"
+                    ],
+                    "flight": "2B136 / CRJ9"
+                }
+            ],
+            "Friday": [
+                {
+                    "times": [
+                        "06:15 - 07:10"
+                    ],
+                    "flight": "2B122 / CRJ9"
+                },
+                {
+                    "times": [
+                        "07:10 - 08:05"
+                    ],
+                    "flight": "2B124 / B38M"
+                },
+                {
+                    "times": [
+                        "10:20 - 11:15"
+                    ],
+                    "flight": "2B126 / B38M"
+                },
+                {
+                    "times": [
+                        "13:50 - 14:45"
+                    ],
+                    "flight": "2B128 / B38M"
+                },
+                {
+                    "times": [
+                        "16:40 - 17:35"
+                    ],
+                    "flight": "2B130 / CRJ9"
+                },
+                {
+                    "times": [
+                        "17:15 - 18:10"
+                    ],
+                    "flight": "2B132 / B38M"
+                },
+                {
+                    "times": [
+                        "19:05 - 20:00"
+                    ],
+                    "flight": "2B136 / CRJ9"
+                }
+            ],
+            "Saturday": [
+                {
+                    "times": [
+                        "06:15 - 07:10"
+                    ],
+                    "flight": "2B122 / CRJ9"
+                },
+                {
+                    "times": [
+                        "11:45 - 12:40"
+                    ],
+                    "flight": "2B126 / CRJ9"
+                },
+                {
+                    "times": [
+                        "13:45 - 14:40"
+                    ],
+                    "flight": "2B128 / CRJ9"
+                },
+                {
+                    "times": [
+                        "16:45 - 17:40"
+                    ],
+                    "flight": "2B132 / CRJ9"
+                }
+            ],
+            "Sunday": [
+                {
+                    "times": [
+                        "07:10 - 08:05"
+                    ],
+                    "flight": "2B124 / B38M"
+                },
+                {
+                    "times": [
+                        "10:10 - 11:05"
+                    ],
+                    "flight": "2B126 / CRJ9"
+                },
+                {
+                    "times": [
+                        "12:15 - 13:10"
+                    ],
+                    "flight": "2B130 / CRJ9"
+                },
+                {
+                    "times": [
+                        "16:00 - 16:55"
+                    ],
+                    "flight": "2B132 / B38M"
+                },
+                {
+                    "times": [
+                        "17:15 - 18:10"
+                    ],
+                    "flight": "2B134 / CRJ9"
+                },
+                {
+                    "times": [
+                        "19:30 - 20:25"
+                    ],
+                    "flight": "2B136 / B38M"
+                },
+                {
+                    "times": [
+                        "21:20 - 22:15"
+                    ],
+                    "flight": "2B138 / B38M"
+                }
+            ]
+        }
     },
-    "inbound": {
-        "Monday": [
-            {
-                "times": [
-                    "06:15 - 07:10"
-                ],
-                "flight": "2B122 / CRJ9"
-            },
-            {
-                "times": [
-                    "07:10 - 08:05"
-                ],
-                "flight": "2B124 / B38M"
-            },
-            {
-                "times": [
-                    "10:20 - 11:15"
-                ],
-                "flight": "2B126 / B38M"
-            },
-            {
-                "times": [
-                    "13:50 - 14:45"
-                ],
-                "flight": "2B128 / B38M"
-            },
-            {
-                "times": [
-                    "16:40 - 17:35"
-                ],
-                "flight": "2B130 / CRJ9"
-            },
-            {
-                "times": [
-                    "17:15 - 18:10"
-                ],
-                "flight": "2B132 / B38M"
-            },
-            {
-                "times": [
-                    "19:05 - 20:00"
-                ],
-                "flight": "2B136 / CRJ9"
-            }
-        ],
-        "Tuesday": [
-            {
-                "times": [
-                    "06:15 - 07:10"
-                ],
-                "flight": "2B122 / CRJ9"
-            },
-            {
-                "times": [
-                    "07:10 - 08:05"
-                ],
-                "flight": "2B124 / B38M"
-            },
-            {
-                "times": [
-                    "10:20 - 11:15"
-                ],
-                "flight": "2B126 / B38M"
-            },
-            {
-                "times": [
-                    "13:50 - 14:45"
-                ],
-                "flight": "2B128 / B38M"
-            },
-            {
-                "times": [
-                    "16:40 - 17:35"
-                ],
-                "flight": "2B130 / CRJ9"
-            },
-            {
-                "times": [
-                    "17:15 - 18:10"
-                ],
-                "flight": "2B132 / B38M"
-            },
-            {
-                "times": [
-                    "19:05 - 20:00"
-                ],
-                "flight": "2B136 / CRJ9"
-            }
-        ],
-        "Wednesday": [
-            {
-                "times": [
-                    "06:15 - 07:10"
-                ],
-                "flight": "2B122 / CRJ9"
-            },
-            {
-                "times": [
-                    "07:10 - 08:05"
-                ],
-                "flight": "2B124 / B38M"
-            },
-            {
-                "times": [
-                    "10:20 - 11:15"
-                ],
-                "flight": "2B126 / B38M"
-            },
-            {
-                "times": [
-                    "13:50 - 14:45"
-                ],
-                "flight": "2B128 / B38M"
-            },
-            {
-                "times": [
-                    "16:40 - 17:35"
-                ],
-                "flight": "2B130 / CRJ9"
-            },
-            {
-                "times": [
-                    "17:15 - 18:10"
-                ],
-                "flight": "2B132 / B38M"
-            },
-            {
-                "times": [
-                    "19:05 - 20:00"
-                ],
-                "flight": "2B136 / CRJ9"
-            }
-        ],
-        "Thursday": [
-            {
-                "times": [
-                    "06:15 - 07:10"
-                ],
-                "flight": "2B122 / CRJ9"
-            },
-            {
-                "times": [
-                    "07:10 - 08:05"
-                ],
-                "flight": "2B124 / B38M"
-            },
-            {
-                "times": [
-                    "10:20 - 11:15"
-                ],
-                "flight": "2B126 / B38M"
-            },
-            {
-                "times": [
-                    "13:50 - 14:45"
-                ],
-                "flight": "2B128 / B38M"
-            },
-            {
-                "times": [
-                    "16:40 - 17:35"
-                ],
-                "flight": "2B130 / CRJ9"
-            },
-            {
-                "times": [
-                    "17:15 - 18:10"
-                ],
-                "flight": "2B132 / B38M"
-            },
-            {
-                "times": [
-                    "19:05 - 20:00"
-                ],
-                "flight": "2B136 / CRJ9"
-            }
-        ],
-        "Friday": [
-            {
-                "times": [
-                    "06:15 - 07:10"
-                ],
-                "flight": "2B122 / CRJ9"
-            },
-            {
-                "times": [
-                    "07:10 - 08:05"
-                ],
-                "flight": "2B124 / B38M"
-            },
-            {
-                "times": [
-                    "10:20 - 11:15"
-                ],
-                "flight": "2B126 / B38M"
-            },
-            {
-                "times": [
-                    "13:50 - 14:45"
-                ],
-                "flight": "2B128 / B38M"
-            },
-            {
-                "times": [
-                    "16:40 - 17:35"
-                ],
-                "flight": "2B130 / CRJ9"
-            },
-            {
-                "times": [
-                    "17:15 - 18:10"
-                ],
-                "flight": "2B132 / B38M"
-            },
-            {
-                "times": [
-                    "19:05 - 20:00"
-                ],
-                "flight": "2B136 / CRJ9"
-            }
-        ],
-        "Saturday": [
-            {
-                "times": [
-                    "06:15 - 07:10"
-                ],
-                "flight": "2B122 / CRJ9"
-            },
-            {
-                "times": [
-                    "11:45 - 12:40"
-                ],
-                "flight": "2B126 / CRJ9"
-            },
-            {
-                "times": [
-                    "13:45 - 14:40"
-                ],
-                "flight": "2B128 / CRJ9"
-            },
-            {
-                "times": [
-                    "16:45 - 17:40"
-                ],
-                "flight": "2B132 / CRJ9"
-            }
-        ],
-        "Sunday": [
-            {
-                "times": [
-                    "07:10 - 08:05"
-                ],
-                "flight": "2B124 / B38M"
-            },
-            {
-                "times": [
-                    "10:10 - 11:05"
-                ],
-                "flight": "2B126 / CRJ9"
-            },
-            {
-                "times": [
-                    "12:15 - 13:10"
-                ],
-                "flight": "2B130 / CRJ9"
-            },
-            {
-                "times": [
-                    "17:15 - 18:10"
-                ],
-                "flight": "2B134 / CRJ9"
-            },
-            {
-                "times": [
-                    "19:30 - 20:25"
-                ],
-                "flight": "2B136 / B38M"
-            },
-            {
-                "times": [
-                    "21:20 - 22:15"
-                ],
-                "flight": "2B138 / B38M"
-            }
-        ]
-    }
-},
     "OSL-TRD": {
     "outbound": {
         "Monday": [
@@ -7544,6 +7696,12 @@ const additionalSchedules = {
                         "19:05 - 20:35"
                     ],
                     "flight": "2B187 / B38M"
+                },
+                {
+                    "times": [
+                        "20:50 - 22:20"
+                    ],
+                    "flight": "2B189 / B38M"
                 }
             ],
             "Tuesday": [
@@ -7558,6 +7716,12 @@ const additionalSchedules = {
                         "19:05 - 20:35"
                     ],
                     "flight": "2B187 / B38M"
+                },
+                {
+                    "times": [
+                        "21:50 - 23:20"
+                    ],
+                    "flight": "2B189 / B38M"
                 }
             ],
             "Wednesday": [
@@ -7572,6 +7736,12 @@ const additionalSchedules = {
                         "19:05 - 20:35"
                     ],
                     "flight": "2B187 / B38M"
+                },
+                {
+                    "times": [
+                        "20:50 - 22:20"
+                    ],
+                    "flight": "2B189 / B38M"
                 }
             ],
             "Thursday": [
@@ -7586,6 +7756,12 @@ const additionalSchedules = {
                         "19:05 - 20:35"
                     ],
                     "flight": "2B187 / B38M"
+                },
+                {
+                    "times": [
+                        "21:50 - 23:20"
+                    ],
+                    "flight": "2B189 / B38M"
                 }
             ],
             "Friday": [
@@ -7600,6 +7776,12 @@ const additionalSchedules = {
                         "19:05 - 20:35"
                     ],
                     "flight": "2B187 / B38M"
+                },
+                {
+                    "times": [
+                        "20:50 - 22:20"
+                    ],
+                    "flight": "2B189 / B38M"
                 }
             ],
             "Saturday": [],
@@ -7609,11 +7791,23 @@ const additionalSchedules = {
                         "15:30 - 17:00"
                     ],
                     "flight": "2B185 / B38M"
+                },
+                {
+                    "times": [
+                        "20:50 - 22:20"
+                    ],
+                    "flight": "2B189 / B38M"
                 }
             ]
         },
         "inbound": {
             "Monday": [
+                {
+                    "times": [
+                        "06:10 - 07:40"
+                    ],
+                    "flight": "2B182 / B38M"
+                },
                 {
                     "times": [
                         "10:40 - 12:10"
@@ -7630,6 +7824,12 @@ const additionalSchedules = {
             "Tuesday": [
                 {
                     "times": [
+                        "06:10 - 07:40"
+                    ],
+                    "flight": "2B182 / B38M"
+                },
+                {
+                    "times": [
                         "10:40 - 12:10"
                     ],
                     "flight": "2B184 / B38M"
@@ -7642,6 +7842,12 @@ const additionalSchedules = {
                 }
             ],
             "Wednesday": [
+                {
+                    "times": [
+                        "06:10 - 07:40"
+                    ],
+                    "flight": "2B182 / B38M"
+                },
                 {
                     "times": [
                         "10:40 - 12:10"
@@ -7658,6 +7864,12 @@ const additionalSchedules = {
             "Thursday": [
                 {
                     "times": [
+                        "06:10 - 07:40"
+                    ],
+                    "flight": "2B182 / B38M"
+                },
+                {
+                    "times": [
                         "10:40 - 12:10"
                     ],
                     "flight": "2B184 / B38M"
@@ -7672,6 +7884,12 @@ const additionalSchedules = {
             "Friday": [
                 {
                     "times": [
+                        "06:10 - 07:40"
+                    ],
+                    "flight": "2B182 / B38M"
+                },
+                {
+                    "times": [
                         "10:40 - 12:10"
                     ],
                     "flight": "2B184 / B38M"
@@ -7683,7 +7901,14 @@ const additionalSchedules = {
                     "flight": "2B188 / B38M"
                 }
             ],
-            "Saturday": [],
+            "Saturday": [
+                {
+                    "times": [
+                        "06:10 - 07:40"
+                    ],
+                    "flight": "2B182 / B38M"
+                }
+            ],
             "Sunday": [
                 {
                     "times": [
@@ -7765,9 +7990,9 @@ const additionalSchedules = {
             "Sunday": [
                 {
                     "times": [
-                        "21:10 - 22:00"
+                        "17:40 - 18:30"
                     ],
-                    "flight": "2B227 / CRJ9"
+                    "flight": "2B227 / B38M"
                 }
             ]
         },
@@ -7841,9 +8066,9 @@ const additionalSchedules = {
             "Sunday": [
                 {
                     "times": [
-                        "22:30 - 23:20"
+                        "19:05 - 19:55"
                     ],
-                    "flight": "2B228 / CRJ9"
+                    "flight": "2B228 / B38M"
                 }
             ]
         }
@@ -8481,267 +8706,279 @@ const additionalSchedules = {
         }
     },
     "OSL-ARN": {
-    "outbound": {
-        "Monday": [
-            {
-                "times": [
-                    "06:30 - 07:30"
-                ],
-                "flight": "2B577 / CRJ9"
-            },
-            {
-                "times": [
-                    "15:20 - 16:20"
-                ],
-                "flight": "2B579 / CRJ9"
-            },
-            {
-                "times": [
-                    "19:40 - 20:40"
-                ],
-                "flight": "2B581 / B38M"
-            }
-        ],
-        "Tuesday": [
-            {
-                "times": [
-                    "06:30 - 07:30"
-                ],
-                "flight": "2B577 / CRJ9"
-            },
-            {
-                "times": [
-                    "15:20 - 16:20"
-                ],
-                "flight": "2B579 / CRJ9"
-            },
-            {
-                "times": [
-                    "19:40 - 20:40"
-                ],
-                "flight": "2B581 / B38M"
-            }
-        ],
-        "Wednesday": [
-            {
-                "times": [
-                    "06:30 - 07:30"
-                ],
-                "flight": "2B577 / CRJ9"
-            },
-            {
-                "times": [
-                    "15:20 - 16:20"
-                ],
-                "flight": "2B579 / CRJ9"
-            },
-            {
-                "times": [
-                    "19:40 - 20:40"
-                ],
-                "flight": "2B581 / B38M"
-            }
-        ],
-        "Thursday": [
-            {
-                "times": [
-                    "06:30 - 07:30"
-                ],
-                "flight": "2B577 / CRJ9"
-            },
-            {
-                "times": [
-                    "15:20 - 16:20"
-                ],
-                "flight": "2B579 / CRJ9"
-            },
-            {
-                "times": [
-                    "19:40 - 20:40"
-                ],
-                "flight": "2B581 / B38M"
-            }
-        ],
-        "Friday": [
-            {
-                "times": [
-                    "06:30 - 07:30"
-                ],
-                "flight": "2B577 / CRJ9"
-            },
-            {
-                "times": [
-                    "15:20 - 16:20"
-                ],
-                "flight": "2B579 / CRJ9"
-            },
-            {
-                "times": [
-                    "19:40 - 20:40"
-                ],
-                "flight": "2B581 / B38M"
-            }
-        ],
-        "Saturday": [
-            {
-                "times": [
-                    "07:20 - 08:20"
-                ],
-                "flight": "2B577 / CRJ9"
-            },
-            {
-                "times": [
-                    "16:40 - 17:40"
-                ],
-                "flight": "2B579 / CRJ9"
-            }
-        ],
-        "Sunday": [
-            {
-                "times": [
-                    "12:45 - 13:45"
-                ],
-                "flight": "2B577 / CRJ9"
-            },
-            {
-                "times": [
-                    "17:55 - 18:55"
-                ],
-                "flight": "2B579 / CRJ9"
-            }
-        ]
+        "outbound": {
+            "Monday": [
+                {
+                    "times": [
+                        "06:30 - 07:30"
+                    ],
+                    "flight": "2B577 / CRJ9"
+                },
+                {
+                    "times": [
+                        "15:20 - 16:20"
+                    ],
+                    "flight": "2B579 / CRJ9"
+                },
+                {
+                    "times": [
+                        "19:40 - 20:40"
+                    ],
+                    "flight": "2B581 / B38M"
+                }
+            ],
+            "Tuesday": [
+                {
+                    "times": [
+                        "06:30 - 07:30"
+                    ],
+                    "flight": "2B577 / CRJ9"
+                },
+                {
+                    "times": [
+                        "15:20 - 16:20"
+                    ],
+                    "flight": "2B579 / CRJ9"
+                },
+                {
+                    "times": [
+                        "19:40 - 20:40"
+                    ],
+                    "flight": "2B581 / B38M"
+                }
+            ],
+            "Wednesday": [
+                {
+                    "times": [
+                        "06:30 - 07:30"
+                    ],
+                    "flight": "2B577 / CRJ9"
+                },
+                {
+                    "times": [
+                        "15:20 - 16:20"
+                    ],
+                    "flight": "2B579 / CRJ9"
+                },
+                {
+                    "times": [
+                        "19:40 - 20:40"
+                    ],
+                    "flight": "2B581 / B38M"
+                }
+            ],
+            "Thursday": [
+                {
+                    "times": [
+                        "06:30 - 07:30"
+                    ],
+                    "flight": "2B577 / CRJ9"
+                },
+                {
+                    "times": [
+                        "15:20 - 16:20"
+                    ],
+                    "flight": "2B579 / CRJ9"
+                },
+                {
+                    "times": [
+                        "19:40 - 20:40"
+                    ],
+                    "flight": "2B581 / B38M"
+                }
+            ],
+            "Friday": [
+                {
+                    "times": [
+                        "06:30 - 07:30"
+                    ],
+                    "flight": "2B577 / CRJ9"
+                },
+                {
+                    "times": [
+                        "15:20 - 16:20"
+                    ],
+                    "flight": "2B579 / CRJ9"
+                },
+                {
+                    "times": [
+                        "19:40 - 20:40"
+                    ],
+                    "flight": "2B581 / B38M"
+                }
+            ],
+            "Saturday": [
+                {
+                    "times": [
+                        "07:20 - 08:20"
+                    ],
+                    "flight": "2B577 / CRJ9"
+                },
+                {
+                    "times": [
+                        "16:40 - 17:40"
+                    ],
+                    "flight": "2B579 / CRJ9"
+                }
+            ],
+            "Sunday": [
+                {
+                    "times": [
+                        "12:45 - 13:45"
+                    ],
+                    "flight": "2B577 / CRJ9"
+                },
+                {
+                    "times": [
+                        "17:55 - 18:55"
+                    ],
+                    "flight": "2B579 / CRJ9"
+                },
+                {
+                    "times": [
+                        "21:10 - 22:10"
+                    ],
+                    "flight": "2B581 / CRJ9"
+                }
+            ]
+        },
+        "inbound": {
+            "Monday": [
+                {
+                    "times": [
+                        "11:55 - 12:55"
+                    ],
+                    "flight": "2B578 / CRJ9"
+                },
+                {
+                    "times": [
+                        "17:00 - 18:00"
+                    ],
+                    "flight": "2B580 / CRJ9"
+                },
+                {
+                    "times": [
+                        "21:25 - 22:25"
+                    ],
+                    "flight": "2B582 / B38M"
+                }
+            ],
+            "Tuesday": [
+                {
+                    "times": [
+                        "11:55 - 12:55"
+                    ],
+                    "flight": "2B578 / CRJ9"
+                },
+                {
+                    "times": [
+                        "17:00 - 18:00"
+                    ],
+                    "flight": "2B580 / CRJ9"
+                },
+                {
+                    "times": [
+                        "21:25 - 22:25"
+                    ],
+                    "flight": "2B582 / B38M"
+                }
+            ],
+            "Wednesday": [
+                {
+                    "times": [
+                        "11:55 - 12:55"
+                    ],
+                    "flight": "2B578 / CRJ9"
+                },
+                {
+                    "times": [
+                        "17:00 - 18:00"
+                    ],
+                    "flight": "2B580 / CRJ9"
+                },
+                {
+                    "times": [
+                        "21:25 - 22:25"
+                    ],
+                    "flight": "2B582 / B38M"
+                }
+            ],
+            "Thursday": [
+                {
+                    "times": [
+                        "11:55 - 12:55"
+                    ],
+                    "flight": "2B578 / CRJ9"
+                },
+                {
+                    "times": [
+                        "17:00 - 18:00"
+                    ],
+                    "flight": "2B580 / CRJ9"
+                },
+                {
+                    "times": [
+                        "21:25 - 22:25"
+                    ],
+                    "flight": "2B582 / B38M"
+                }
+            ],
+            "Friday": [
+                {
+                    "times": [
+                        "11:55 - 12:55"
+                    ],
+                    "flight": "2B578 / CRJ9"
+                },
+                {
+                    "times": [
+                        "17:00 - 18:00"
+                    ],
+                    "flight": "2B580 / CRJ9"
+                },
+                {
+                    "times": [
+                        "21:25 - 22:25"
+                    ],
+                    "flight": "2B582 / B38M"
+                }
+            ],
+            "Saturday": [
+                {
+                    "times": [
+                        "08:55 - 09:55"
+                    ],
+                    "flight": "2B578 / CRJ9"
+                },
+                {
+                    "times": [
+                        "18:25 - 19:25"
+                    ],
+                    "flight": "2B580 / CRJ9"
+                }
+            ],
+            "Sunday": [
+                {
+                    "times": [
+                        "14:20 - 15:20"
+                    ],
+                    "flight": "2B578 / CRJ9"
+                },
+                {
+                    "times": [
+                        "19:30 - 20:30"
+                    ],
+                    "flight": "2B580 / CRJ9"
+                },
+                {
+                    "times": [
+                        "22:50 - 23:50"
+                    ],
+                    "flight": "2B582 / CRJ9"
+                }
+            ]
+        }
     },
-    "inbound": {
-        "Monday": [
-            {
-                "times": [
-                    "11:55 - 12:55"
-                ],
-                "flight": "2B578 / CRJ9"
-            },
-            {
-                "times": [
-                    "17:00 - 18:00"
-                ],
-                "flight": "2B580 / CRJ9"
-            },
-            {
-                "times": [
-                    "21:25 - 22:25"
-                ],
-                "flight": "2B582 / B38M"
-            }
-        ],
-        "Tuesday": [
-            {
-                "times": [
-                    "08:10 - 09:10"
-                ],
-                "flight": "2B578 / CRJ9"
-            },
-            {
-                "times": [
-                    "17:00 - 18:00"
-                ],
-                "flight": "2B580 / CRJ9"
-            },
-            {
-                "times": [
-                    "21:25 - 22:25"
-                ],
-                "flight": "2B582 / B38M"
-            }
-        ],
-        "Wednesday": [
-            {
-                "times": [
-                    "11:55 - 12:55"
-                ],
-                "flight": "2B578 / CRJ9"
-            },
-            {
-                "times": [
-                    "17:00 - 18:00"
-                ],
-                "flight": "2B580 / CRJ9"
-            },
-            {
-                "times": [
-                    "21:25 - 22:25"
-                ],
-                "flight": "2B582 / B38M"
-            }
-        ],
-        "Thursday": [
-            {
-                "times": [
-                    "08:10 - 09:10"
-                ],
-                "flight": "2B578 / CRJ9"
-            },
-            {
-                "times": [
-                    "17:00 - 18:00"
-                ],
-                "flight": "2B580 / CRJ9"
-            },
-            {
-                "times": [
-                    "21:25 - 22:25"
-                ],
-                "flight": "2B582 / B38M"
-            }
-        ],
-        "Friday": [
-            {
-                "times": [
-                    "11:55 - 12:55"
-                ],
-                "flight": "2B578 / CRJ9"
-            },
-            {
-                "times": [
-                    "17:00 - 18:00"
-                ],
-                "flight": "2B580 / CRJ9"
-            },
-            {
-                "times": [
-                    "21:25 - 22:25"
-                ],
-                "flight": "2B582 / B38M"
-            }
-        ],
-        "Saturday": [
-            {
-                "times": [
-                    "08:55 - 09:55"
-                ],
-                "flight": "2B578 / CRJ9"
-            },
-            {
-                "times": [
-                    "18:25 - 19:25"
-                ],
-                "flight": "2B580 / CRJ9"
-            }
-        ],
-        "Sunday": [
-            {
-                "times": [
-                    "14:20 - 15:20"
-                ],
-                "flight": "2B578 / CRJ9"
-            },
-            {
-                "times": [
-                    "19:30 - 20:30"
-                ],
-                "flight": "2B580 / CRJ9"
-            }
-        ]
-    }
-},
     "OSL-AYT": {
         "outbound": {
             "Monday": [],
@@ -9638,7 +9875,9 @@ const additionalSchedules = {
                     "times": [
                         "06:20 - 11:25"
                     ],
-                    "flight": "2B565 / B38M"
+                    "flight": "2B565 / B38M",
+                "startWeek": 42,
+                "endWeek": 15
                 }
             ],
             "Wednesday": [],
@@ -9654,7 +9893,9 @@ const additionalSchedules = {
                     "times": [
                         "12:15 - 17:15"
                     ],
-                    "flight": "2B566 / B38M"
+                    "flight": "2B566 / B38M",
+                "startWeek": 42,
+                "endWeek": 15
                 }
             ],
             "Wednesday": [],
@@ -10063,7 +10304,7 @@ const additionalSchedules = {
                     "16:10 - 21:50"
                 ],
                 "flight": "2B1016 / B38M",
-                "startWeek": 40,
+                "startWeek": 42,
                 "endWeek": 15
             }
         ],
@@ -10073,7 +10314,7 @@ const additionalSchedules = {
                     "16:10 - 21:50"
                 ],
                 "flight": "2B1016 / B38M",
-                "startWeek": 40,
+                "startWeek": 42,
                 "endWeek": 15
             }
         ],
@@ -10104,7 +10345,7 @@ const additionalSchedules = {
                     "09:35 - 15:15"
                 ],
                 "flight": "2B1015 / B38M",
-                "startWeek": 40,
+                "startWeek": 42,
                 "endWeek": 15
             }
         ],
@@ -10114,7 +10355,7 @@ const additionalSchedules = {
                     "09:35 - 15:15"
                 ],
                 "flight": "2B1015 / B38M",
-                "startWeek": 40,
+                "startWeek": 42,
                 "endWeek": 15
             }
         ],
@@ -10505,7 +10746,9 @@ const additionalSchedules = {
                     "times": [
                         "09:45 - 15:25"
                     ],
-                    "flight": "2B557 / B38M"
+                    "flight": "2B557 / B38M",
+                "startWeek": 42,
+                "endWeek": 15
                 }
             ],
             "Thursday": [],
@@ -10515,7 +10758,9 @@ const additionalSchedules = {
                     "times": [
                         "09:45 - 15:25"
                     ],
-                    "flight": "2B557 / B38M"
+                    "flight": "2B557 / B38M",
+                "startWeek": 42,
+                "endWeek": 15
                 }
             ],
             "Sunday": []
@@ -10528,7 +10773,9 @@ const additionalSchedules = {
                     "times": [
                         "16:20 - 22:00"
                     ],
-                    "flight": "2B558 / B38M"
+                    "flight": "2B558 / B38M",
+                "startWeek": 42,
+                "endWeek": 15
                 }
             ],
             "Thursday": [],
@@ -10538,7 +10785,9 @@ const additionalSchedules = {
                     "times": [
                         "16:20 - 22:00"
                     ],
-                    "flight": "2B558 / B38M"
+                    "flight": "2B558 / B38M",
+                "startWeek": 42,
+                "endWeek": 15
                 }
             ],
             "Sunday": []
@@ -10664,7 +10913,14 @@ const additionalSchedules = {
                     "flight": "2B1115 / CRJ9"
                 }
             ],
-            "Tuesday": [],
+            "Tuesday": [
+                {
+                    "times": [
+                        "09:30 - 11:50"
+                    ],
+                    "flight": "2B617 / B38M"
+                }
+            ],
             "Wednesday": [
                 {
                     "times": [
@@ -10673,7 +10929,14 @@ const additionalSchedules = {
                     "flight": "2B1115 / CRJ9"
                 }
             ],
-            "Thursday": [],
+            "Thursday": [
+                {
+                    "times": [
+                        "09:30 - 11:50"
+                    ],
+                    "flight": "2B617 / B38M"
+                }
+            ],
             "Friday": [
                 {
                     "times": [
@@ -10701,7 +10964,14 @@ const additionalSchedules = {
                     "flight": "2B1116 / CRJ9"
                 }
             ],
-            "Tuesday": [],
+            "Tuesday": [
+                {
+                    "times": [
+                        "12:35 - 14:55"
+                    ],
+                    "flight": "2B618 / B38M"
+                }
+            ],
             "Wednesday": [
                 {
                     "times": [
@@ -10710,7 +10980,14 @@ const additionalSchedules = {
                     "flight": "2B1116 / CRJ9"
                 }
             ],
-            "Thursday": [],
+            "Thursday": [
+                {
+                    "times": [
+                        "12:35 - 14:55"
+                    ],
+                    "flight": "2B618 / B38M"
+                }
+            ],
             "Friday": [
                 {
                     "times": [
@@ -10743,6 +11020,8 @@ const additionalSchedules = {
                         "12:20 - 17:50"
                     ],
                     "flight": "2B9821 / B38M",
+                "startWeek": 42,
+                "endWeek": 15,
                     "flightType": "charter"
                 }
             ],
@@ -10760,6 +11039,8 @@ const additionalSchedules = {
                         "18:40 - 00:10"
                     ],
                     "flight": "2B9822 / B38M",
+                "startWeek": 42,
+                "endWeek": 15,
                     "flightType": "charter"
                 }
             ],
@@ -10779,6 +11060,8 @@ const additionalSchedules = {
                         "09:20 - 15:05"
                     ],
                     "flight": "2B9827 / B38M",
+                "startWeek": 42,
+                "endWeek": 15,
                     "flightType": "charter"
                 }
             ],
@@ -10796,6 +11079,8 @@ const additionalSchedules = {
                         "15:55 - 21:40"
                     ],
                     "flight": "2B9828 / B38M",
+                "startWeek": 42,
+                "endWeek": 15,
                     "flightType": "charter"
                 }
             ],
@@ -10851,7 +11136,9 @@ const additionalSchedules = {
                     "times": [
                         "09:10 - 15:10"
                     ],
-                    "flight": "2B1027 / B38M"
+                    "flight": "2B1027 / B38M",
+                "startWeek": 42,
+                "endWeek": 15
                 }
             ]
         },
@@ -10867,7 +11154,9 @@ const additionalSchedules = {
                     "times": [
                         "16:05 - 22:05"
                     ],
-                    "flight": "2B1028 / B38M"
+                    "flight": "2B1028 / B38M",
+                "startWeek": 42,
+                "endWeek": 15
                 }
             ]
         }
@@ -10879,7 +11168,9 @@ const additionalSchedules = {
                     "times": [
                         "09:30 - 14:50"
                     ],
-                    "flight": "2B1013 / B38M"
+                    "flight": "2B1013 / B38M",
+                "startWeek": 42,
+                "endWeek": 15
                 }
             ],
             "Tuesday": [],
@@ -10895,7 +11186,9 @@ const additionalSchedules = {
                     "times": [
                         "15:45 - 21:05"
                     ],
-                    "flight": "2B1014 / B38M"
+                    "flight": "2B1014 / B38M",
+                "startWeek": 42,
+                "endWeek": 15
                 }
             ],
             "Tuesday": [],
@@ -10916,7 +11209,9 @@ const additionalSchedules = {
                     "times": [
                         "09:40 - 15:20"
                     ],
-                    "flight": "2B1019 / B38M"
+                    "flight": "2B1019 / B38M",
+                "startWeek": 42,
+                "endWeek": 15
                 }
             ],
             "Friday": [],
@@ -10932,7 +11227,9 @@ const additionalSchedules = {
                     "times": [
                         "16:10 - 21:50"
                     ],
-                    "flight": "2B1020 / B38M"
+                    "flight": "2B1020 / B38M",
+                "startWeek": 42,
+                "endWeek": 15
                 }
             ],
             "Friday": [],
@@ -10951,7 +11248,9 @@ const additionalSchedules = {
                     "times": [
                         "09:25 - 15:10"
                     ],
-                    "flight": "2B1021 / B38M"
+                    "flight": "2B1021 / B38M",
+                "startWeek": 42,
+                "endWeek": 15
                 }
             ],
             "Saturday": [],
@@ -10967,7 +11266,9 @@ const additionalSchedules = {
                     "times": [
                         "16:05 - 21:50"
                     ],
-                    "flight": "2B1022 / B38M"
+                    "flight": "2B1022 / B38M",
+                "startWeek": 42,
+                "endWeek": 15
                 }
             ],
             "Saturday": [],
@@ -10986,7 +11287,9 @@ const additionalSchedules = {
                     "times": [
                         "09:20 - 14:50"
                     ],
-                    "flight": "2B1025 / B38M"
+                    "flight": "2B1025 / B38M",
+                "startWeek": 42,
+                "endWeek": 15
                 }
             ],
             "Sunday": []
@@ -11002,8 +11305,56 @@ const additionalSchedules = {
                     "times": [
                         "15:40 - 21:10"
                     ],
-                    "flight": "2B1026 / B38M"
+                    "flight": "2B1026 / B38M",
+                "startWeek": 42,
+                "endWeek": 15
                 }
+            ],
+            "Sunday": []
+        }
+    },
+    "SVG-CHQ": {
+        "outbound": {
+            "Monday": [], "Tuesday": [], "Wednesday": [], "Thursday": [], "Friday": [], "Saturday": [],
+            "Sunday": [
+                { "times": ["08:40 - 12:50"], "flight": "2B847 / B38M", "startWeek": 16, "endWeek": 40 }
+            ]
+        },
+        "inbound": {
+            "Monday": [], "Tuesday": [], "Wednesday": [], "Thursday": [], "Friday": [], "Saturday": [],
+            "Sunday": [
+                { "times": ["13:35 - 17:45"], "flight": "2B848 / B38M", "startWeek": 16, "endWeek": 40 }
+            ]
+        }
+    },
+    "SVG-NCE": {
+        "outbound": {
+            "Monday": [], "Tuesday": [], "Wednesday": [], "Thursday": [], "Friday": [],
+            "Saturday": [
+                { "times": ["17:20 - 20:05"], "flight": "2B843 / B38M", "startWeek": 16, "endWeek": 40 }
+            ],
+            "Sunday": []
+        },
+        "inbound": {
+            "Monday": [], "Tuesday": [], "Wednesday": [], "Thursday": [], "Friday": [],
+            "Saturday": [
+                { "times": ["20:50 - 23:35"], "flight": "2B844 / B38M", "startWeek": 16, "endWeek": 40 }
+            ],
+            "Sunday": []
+        }
+    },
+    "SVG-SPU": {
+        "outbound": {
+            "Monday": [], "Tuesday": [], "Wednesday": [], "Thursday": [], "Friday": [],
+            "Saturday": [
+                { "times": ["09:40 - 12:30"], "flight": "2B841 / B38M", "startWeek": 16, "endWeek": 40 }
+            ],
+            "Sunday": []
+        },
+        "inbound": {
+            "Monday": [], "Tuesday": [], "Wednesday": [], "Thursday": [], "Friday": [],
+            "Saturday": [
+                { "times": ["13:15 - 16:05"], "flight": "2B842 / B38M", "startWeek": 16, "endWeek": 40 }
             ],
             "Sunday": []
         }
@@ -11020,7 +11371,9 @@ const additionalSchedules = {
                     "times": [
                         "07:10 - 12:30"
                     ],
-                    "flight": "2B837 / B38M"
+                    "flight": "2B837 / B38M",
+                "startWeek": 42,
+                "endWeek": 15
                 }
             ]
         },
@@ -11037,7 +11390,9 @@ const additionalSchedules = {
                     "times": [
                         "13:20 - 18:40"
                     ],
-                    "flight": "2B838 / B38M"
+                    "flight": "2B838 / B38M",
+                "startWeek": 42,
+                "endWeek": 15
                 }
             ]
         }
@@ -11056,7 +11411,9 @@ const additionalSchedules = {
                     "times": [
                         "09:30 - 14:55"
                     ],
-                    "flight": "2B833 / B38M"
+                    "flight": "2B833 / B38M",
+                "startWeek": 42,
+                "endWeek": 15
                 }
             ],
             "Sunday": []
@@ -11072,12 +11429,217 @@ const additionalSchedules = {
                     "times": [
                         "15:50 - 21:15"
                     ],
-                    "flight": "2B834 / B38M"
+                    "flight": "2B834 / B38M",
+                "startWeek": 42,
+                "endWeek": 15
                 }
             ],
             "Sunday": []
         }
     }
+,
+    "OSL-FUE": {
+    "outbound": {
+        "Monday": [],
+        "Tuesday": [],
+        "Wednesday": [],
+        "Thursday": [],
+        "Friday": [],
+        "Saturday": [
+            {
+                "times": [
+                    "09:40 - 15:20"
+                ],
+                "flight": "2B1121 / B38M",
+                "startWeek": 42,
+                "endWeek": 15
+            }
+        ],
+        "Sunday": []
+    },
+    "inbound": {
+        "Monday": [],
+        "Tuesday": [],
+        "Wednesday": [],
+        "Thursday": [],
+        "Friday": [],
+        "Saturday": [
+            {
+                "times": [
+                    "16:10 - 21:50"
+                ],
+                "flight": "2B1122 / B38M",
+                "startWeek": 42,
+                "endWeek": 15
+            }
+        ],
+        "Sunday": []
+    }
+},
+    "OSL-PRG": {
+    "outbound": {
+        "Monday": [
+            {
+                "times": [
+                    "08:30 - 10:30"
+                ],
+                "flight": "2B615 / B38M"
+            }
+        ],
+        "Tuesday": [],
+        "Wednesday": [],
+        "Thursday": [],
+        "Friday": [
+            {
+                "times": [
+                    "08:30 - 10:30"
+                ],
+                "flight": "2B615 / B38M"
+            }
+        ],
+        "Saturday": [],
+        "Sunday": []
+    },
+    "inbound": {
+        "Monday": [
+            {
+                "times": [
+                    "11:15 - 13:15"
+                ],
+                "flight": "2B616 / B38M"
+            }
+        ],
+        "Tuesday": [],
+        "Wednesday": [],
+        "Thursday": [],
+        "Friday": [
+            {
+                "times": [
+                    "11:15 - 13:15"
+                ],
+                "flight": "2B616 / B38M"
+            }
+        ],
+        "Saturday": [],
+        "Sunday": []
+    }
+},
+    "OSL-SZG": {
+    "outbound": {
+        "Monday": [],
+        "Tuesday": [],
+        "Wednesday": [
+            {
+                "times": [
+                    "09:30 - 11:45"
+                ],
+                "flight": "2B1119 / B38M",
+                "startWeek": 50,
+                "endWeek": 10
+            }
+        ],
+        "Thursday": [],
+        "Friday": [],
+        "Saturday": [],
+        "Sunday": [
+            {
+                "times": [
+                    "08:30 - 10:45"
+                ],
+                "flight": "2B1119 / B38M",
+                "startWeek": 50,
+                "endWeek": 10
+            }
+        ]
+    },
+    "inbound": {
+        "Monday": [],
+        "Tuesday": [],
+        "Wednesday": [
+            {
+                "times": [
+                    "12:25 - 14:40"
+                ],
+                "flight": "2B1120 / B38M",
+                "startWeek": 50,
+                "endWeek": 10
+            }
+        ],
+        "Thursday": [],
+        "Friday": [],
+        "Saturday": [],
+        "Sunday": [
+            {
+                "times": [
+                    "11:25 - 13:40"
+                ],
+                "flight": "2B1120 / B38M",
+                "startWeek": 50,
+                "endWeek": 10
+            }
+        ]
+    }
+},
+    "OSL-GNB": {
+    "outbound": {
+        "Monday": [
+            {
+                "times": [
+                    "13:55 - 16:25"
+                ],
+                "flight": "2B9833 / B38M",
+                "startWeek": 50,
+                "endWeek": 10,
+                "flightType": "charter"
+            }
+        ],
+        "Tuesday": [],
+        "Wednesday": [],
+        "Thursday": [],
+        "Friday": [
+            {
+                "times": [
+                    "13:55 - 16:25"
+                ],
+                "flight": "2B9833 / B38M",
+                "startWeek": 50,
+                "endWeek": 10,
+                "flightType": "charter"
+            }
+        ],
+        "Saturday": [],
+        "Sunday": []
+    },
+    "inbound": {
+        "Monday": [
+            {
+                "times": [
+                    "17:15 - 19:45"
+                ],
+                "flight": "2B9834 / B38M",
+                "startWeek": 50,
+                "endWeek": 10,
+                "flightType": "charter"
+            }
+        ],
+        "Tuesday": [],
+        "Wednesday": [],
+        "Thursday": [],
+        "Friday": [
+            {
+                "times": [
+                    "17:15 - 19:45"
+                ],
+                "flight": "2B9834 / B38M",
+                "startWeek": 50,
+                "endWeek": 10,
+                "flightType": "charter"
+            }
+        ],
+        "Saturday": [],
+        "Sunday": []
+    }
+}
 
 }
 
@@ -12387,7 +12949,9 @@ const bgoSchedules = {
                     "times": [
                         "14:00 - 15:25"
                     ],
-                    "flight": "2B727 / CRJ7"
+                    "flight": "2B727 / CRJ7",
+                "startWeek": 42,
+                "endWeek": 15
                 }
             ],
             "Thursday": [
@@ -12395,7 +12959,9 @@ const bgoSchedules = {
                     "times": [
                         "14:00 - 15:25"
                     ],
-                    "flight": "2B727 / CRJ7"
+                    "flight": "2B727 / CRJ7",
+                "startWeek": 42,
+                "endWeek": 15
                 }
             ],
             "Sunday": [
@@ -12403,7 +12969,9 @@ const bgoSchedules = {
                     "times": [
                         "09:50 - 11:15"
                     ],
-                    "flight": "2B727 / CRJ7"
+                    "flight": "2B727 / CRJ7",
+                "startWeek": 42,
+                "endWeek": 15
                 }
             ]
         },
@@ -12429,7 +12997,9 @@ const bgoSchedules = {
                     "times": [
                         "12:05 - 13:30"
                     ],
-                    "flight": "2B728 / CRJ7"
+                    "flight": "2B728 / CRJ7",
+                "startWeek": 42,
+                "endWeek": 15
                 }
             ]
         }
@@ -12590,6 +13160,86 @@ const bgoSchedules = {
             ]
         }
     },
+    "BGO-SPU": {
+        "outbound": {
+            "Monday": [],
+            "Tuesday": [],
+            "Wednesday": [],
+            "Thursday": [],
+            "Friday": [],
+            "Saturday": [{ "times": ["09:30 - 12:30"], "flight": "2B737 / B38M", "startWeek": 16, "endWeek": 40 }],
+            "Sunday": []
+        },
+        "inbound": {
+            "Monday": [],
+            "Tuesday": [],
+            "Wednesday": [],
+            "Thursday": [],
+            "Friday": [],
+            "Saturday": [{ "times": ["13:15 - 16:15"], "flight": "2B738 / B38M", "startWeek": 16, "endWeek": 40 }],
+            "Sunday": []
+        }
+    },
+    "BGO-CHQ": {
+        "outbound": {
+            "Monday": [],
+            "Tuesday": [],
+            "Wednesday": [],
+            "Thursday": [],
+            "Friday": [],
+            "Saturday": [],
+            "Sunday": [{ "times": ["10:10 - 14:30"], "flight": "2B743 / B38M", "startWeek": 16, "endWeek": 40 }]
+        },
+        "inbound": {
+            "Monday": [],
+            "Tuesday": [],
+            "Wednesday": [],
+            "Thursday": [],
+            "Friday": [],
+            "Saturday": [],
+            "Sunday": [{ "times": ["15:15 - 19:35"], "flight": "2B744 / B38M", "startWeek": 16, "endWeek": 40 }]
+        }
+    },
+    "BGO-NCE": {
+        "outbound": {
+            "Monday": [],
+            "Tuesday": [],
+            "Wednesday": [],
+            "Thursday": [],
+            "Friday": [],
+            "Saturday": [{ "times": ["17:05 - 19:55"], "flight": "2B739 / B38M", "startWeek": 16, "endWeek": 40 }],
+            "Sunday": []
+        },
+        "inbound": {
+            "Monday": [],
+            "Tuesday": [],
+            "Wednesday": [],
+            "Thursday": [],
+            "Friday": [],
+            "Saturday": [{ "times": ["20:40 - 23:30"], "flight": "2B740 / B38M", "startWeek": 16, "endWeek": 40 }],
+            "Sunday": []
+        }
+    },
+    "BGO-RHO": {
+        "outbound": {
+            "Monday": [],
+            "Tuesday": [],
+            "Wednesday": [],
+            "Thursday": [],
+            "Friday": [],
+            "Saturday": [{ "times": ["16:00 - 20:20"], "flight": "2B747 / B38M", "startWeek": 16, "endWeek": 40 }],
+            "Sunday": []
+        },
+        "inbound": {
+            "Monday": [],
+            "Tuesday": [],
+            "Wednesday": [],
+            "Thursday": [],
+            "Friday": [],
+            "Saturday": [{ "times": ["10:55 - 15:15"], "flight": "2B748 / B38M", "startWeek": 16, "endWeek": 40 }],
+            "Sunday": []
+        }
+    },
     "BGO-LPA": { "startWeek": 40,
         "outbound": {
             "Saturday": [
@@ -12597,7 +13247,9 @@ const bgoSchedules = {
                     "times": [
                         "09:45 - 15:20"
                     ],
-                    "flight": "2B727 / B38M"
+                    "flight": "2B727 / B38M",
+                "startWeek": 42,
+                "endWeek": 15
                 }
             ]
         },
@@ -12607,7 +13259,9 @@ const bgoSchedules = {
                     "times": [
                         "16:15 - 21:50"
                     ],
-                    "flight": "2B728 / B38M"
+                    "flight": "2B728 / B38M",
+                "startWeek": 42,
+                "endWeek": 15
                 }
             ]
         }
@@ -12619,7 +13273,9 @@ const bgoSchedules = {
                     "times": [
                         "09:45 - 15:10"
                     ],
-                    "flight": "2B729 / B38M"
+                    "flight": "2B729 / B38M",
+                "startWeek": 42,
+                "endWeek": 15
                 }
             ]
         },
@@ -12629,7 +13285,9 @@ const bgoSchedules = {
                     "times": [
                         "16:05 - 21:30"
                     ],
-                    "flight": "2B730 / B38M"
+                    "flight": "2B730 / B38M",
+                "startWeek": 42,
+                "endWeek": 15
                 }
             ]
         }
@@ -12662,7 +13320,7 @@ const bgoSchedules = {
             Wednesday: [],
             Thursday: [],
             Friday: [],
-            Saturday: [{ times: ["08:55 - 14:25"], flight: "2B925 / B38M" }],
+            Saturday: [{ times: ["08:55 - 14:25"], flight: "2B925 / B38M", startWeek: 42, endWeek: 15 }],
             Sunday: []
         },
         inbound: {
@@ -12671,7 +13329,7 @@ const bgoSchedules = {
             Wednesday: [],
             Thursday: [],
             Friday: [],
-            Saturday: [{ times: ["15:20 - 20:50"], flight: "2B926 / B38M" }],
+            Saturday: [{ times: ["15:20 - 20:50"], flight: "2B926 / B38M", startWeek: 42, endWeek: 15 }],
             Sunday: []
         }
     }
@@ -12837,44 +13495,38 @@ const storedOrigin = key.split("-")[0];
 
 function getFlightsForDate(direction, year, month, day) {
     const date = new Date(year, month, day);
-
-    // October-April seasonal routes operate from ISO week 40 of 2026
-    // through ISO week 15 of 2027.
-    const routeKey = scheduleRouteKey(scheduleRouteFrom, scheduleRouteTo);
-    const seasonalWinterRoutes = new Set([
-        "BGO-LPA",
-        "BGO-TFS",
-        "GOT-TFS",
-        "TFS-GOT",
-        "SVG-LPA",
-        "LPA-SVG",
-        "SVG-TFS",
-        "TFS-SVG",
-        "TRD-LPA",
-        "LPA-TRD",
-        "LPA-AAL",
-        "AAL-LPA",
-        "LPA-AES",
-        "AES-LPA",
-        "LPA-ORB",
-        "ORB-LPA",
-        "LPA-TRF",
-        "TRF-LPA",
-        "OSL-TFS",
-        "TFS-OSL",
-        "OSL-ACE",
-        "ACE-OSL",
-        "OSL-HRG",
-        "HRG-OSL"
-    ]);
-
-    if (seasonalWinterRoutes.has(routeKey) &&
-        !isScheduleActiveForDate({ startWeek: 40 }, date)) {
-        return [];
-    }
-
     const data = getScheduleDirectionData(direction);
     if (!data) return [];
+
+    const routeKey = scheduleRouteKey(scheduleRouteFrom, scheduleRouteTo);
+
+    /*
+       Flight-level operating weeks are the authoritative source for seasonal
+       schedules. This allows a route to contain both year-round and seasonal
+       flights, such as OSL-LPA.
+
+       A small legacy fallback is retained only for the older GOT-TFS/TFS-GOT
+       timetable, which does not yet carry Start/End Week fields in the source
+       document. Newer timetable rows should always use their own flight-level
+       limits.
+    */
+    const hasFlightLevelWeekData = Object.values(data).some(dayFlights =>
+        Array.isArray(dayFlights) && dayFlights.some(flight =>
+            flight && (flight.startWeek != null || flight.endWeek != null)
+        )
+    );
+
+    const legacyWeekRanges = {
+        "GOT-TFS": [40, 15],
+        "TFS-GOT": [40, 15]
+    };
+
+    if (!hasFlightLevelWeekData && legacyWeekRanges[routeKey]) {
+        const [startWeek, endWeek] = legacyWeekRanges[routeKey];
+        if (!isScheduleActiveForDate({ startWeek, endWeek }, date)) {
+            return [];
+        }
+    }
 
     const weekdayIndex = (date.getDay() + 6) % 7;
     const weekday = scheduleWeekdayNames[weekdayIndex];
@@ -12949,7 +13601,12 @@ function updateScheduleMonthButtons() {
 
 function isSeasonalWinterRoute() {
     const key = scheduleRouteKey(scheduleRouteFrom, scheduleRouteTo);
-    const seasonalWinterRoutes = new Set([
+
+    // Keep the legacy seasonal routes that still carry a route-level
+    // startWeek in the older timetable data. Newer timetable rows use
+    // startWeek/endWeek directly on each flight, which is also detected
+    // below.
+    const legacySeasonalRoutes = new Set([
         "BGO-LPA", "LPA-BGO",
         "BGO-TFS", "TFS-BGO",
         "GOT-TFS", "TFS-GOT",
@@ -12964,7 +13621,20 @@ function isSeasonalWinterRoute() {
         "OSL-ACE", "ACE-OSL",
         "OSL-HRG", "HRG-OSL"
     ]);
-    return seasonalWinterRoutes.has(key);
+
+    if (legacySeasonalRoutes.has(key)) return true;
+
+    const directions = ["outbound", "inbound"];
+    return directions.some(direction => {
+        const data = getScheduleDirectionData(direction);
+        if (!data) return false;
+
+        return Object.values(data).some(dayFlights =>
+            Array.isArray(dayFlights) && dayFlights.some(flight =>
+                flight && (flight.startWeek != null || flight.endWeek != null)
+            )
+        );
+    });
 }
 
 function getCalendarMonthIndex(year, month) {
@@ -12972,15 +13642,43 @@ function getCalendarMonthIndex(year, month) {
 }
 
 function getSeasonalWinterCalendarMonths() {
-    return [
-        { year: 2026, month: 9 },  // October
-        { year: 2026, month: 10 }, // November
-        { year: 2026, month: 11 }, // December
-        { year: 2027, month: 0 },  // January
-        { year: 2027, month: 1 },  // February
-        { year: 2027, month: 2 },  // March
-        { year: 2027, month: 3 }   // April
-    ];
+    // Seasonal calendars only expose months that actually contain at least
+    // one operating flight within the 13-month scheduling horizon. This is
+    // deliberately calculated from the flight-level schedule data, so a
+    // route can contain both year-round and seasonal flights (e.g. OSL-LPA).
+    const today = getScheduleToday();
+    const max = getScheduleMaxDate();
+    const months = [];
+
+    let year = today.year;
+    let month = today.month;
+
+    while (year < max.year || (year === max.year && month <= max.month)) {
+        let monthHasFlights = false;
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+        for (let day = 1; day <= daysInMonth; day++) {
+            if (
+                getFlightsForDate("outbound", year, month, day).length > 0 ||
+                getFlightsForDate("inbound", year, month, day).length > 0
+            ) {
+                monthHasFlights = true;
+                break;
+            }
+        }
+
+        if (monthHasFlights) {
+            months.push({ year, month });
+        }
+
+        month++;
+        if (month > 11) {
+            month = 0;
+            year++;
+        }
+    }
+
+    return months;
 }
 
 function getScheduleDisplayMonths() {
