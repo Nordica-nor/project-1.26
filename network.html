@@ -2788,7 +2788,6 @@ const routes = [
     { from: "OSL", to: "ZTH", holidays: true, flightTime: "03:45", aircraftType: "Boeing 737-8 MAX", season: "June - August" },
     { from: "OSL", to: "SZG", flightTime: "02:15", seasonal: true, seasonStart: "December", seasonEnd: "March", startWeek: 50, endWeek: 10, aircraftType: "Boeing 737-8 MAX", season: "Week 50 - Week 10", frequency: "Wed · Sun" },
     { from: "OSL", to: "GNB", holidays: true, flightTime: "02:30", seasonal: true, seasonStart: "December", seasonEnd: "March", startWeek: 50, endWeek: 10, aircraftType: "Boeing 737-8 MAX", season: "Week 50 - Week 10", frequency: "Mon · Fri" },
-    { from: "OSL", to: "LYS" },
     { from: "SVG", to: "ALC" , flightTime: "03:10", aircraftType: "Boeing 737-8 MAX" , season: "Year-round" , frequency: "Sat" },
     { from: "SVG", to: "SPU", flightTime: "02:50", seasonal: true, startWeek: 16, endWeek: 40, season: "Week 16 - Week 40", aircraftType: "Boeing 737-8 MAX", frequency: "Sat" },
     { from: "SVG", to: "CHQ", flightTime: "04:10", seasonal: true, startWeek: 16, endWeek: 40, season: "Week 16 - Week 40", aircraftType: "Boeing 737-8 MAX", frequency: "Sun" },
@@ -2849,7 +2848,7 @@ const routes = [
 ,
     { from: "TFS", to: "GOT", flightTime: "05:30", aircraftType: "Boeing 737-8 MAX", startWeek: 42, endWeek: 15, season: "October - April", frequency: "Sat" , flightType: "Combined flight" }
 ,
-    { from: "GOT", to: "CHQ" },
+    { from: "GOT", to: "CHQ", flightTime: "03:55", aircraftType: "Boeing 737-8 MAX", seasonal: true, seasonStart: "April", seasonEnd: "October", startWeek: 16, endWeek: 40, season: "April - October", frequency: "Sat" },
 
     { from: "LPA", to: "AES", flightTime: "05:40", aircraftType: "Boeing 737-8 MAX", startWeek: 42, endWeek: 15, season: "October - April", frequency: "Thu", flightType: "Combined flight" }
 ,
@@ -15425,6 +15424,26 @@ const bgoSchedules = {
             Friday: [{ times: ["08:05 - 09:25"], flight: "2B734 / CRJ9" }],
             Saturday: [],
             Sunday: []
+        }
+    },
+    "GOT-CHQ": {
+        "outbound": {
+            "Monday": [],
+            "Tuesday": [],
+            "Wednesday": [],
+            "Thursday": [],
+            "Friday": [],
+            "Saturday": [{ "times": ["15:35 - 19:30"], "flight": "2B931 / B38M", "startWeek": 16, "endWeek": 40 }],
+            "Sunday": []
+        },
+        "inbound": {
+            "Monday": [],
+            "Tuesday": [],
+            "Wednesday": [],
+            "Thursday": [],
+            "Friday": [],
+            "Saturday": [{ "times": ["10:55 - 14:50"], "flight": "2B932 / B38M", "startWeek": 16, "endWeek": 40 }],
+            "Sunday": []
         }
     },
     "GOT-TFS": {
