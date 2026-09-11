@@ -262,7 +262,10 @@ button.primary:hover { background:var(--blue-2); }
 .flight-result-number { font-size:12px; font-weight:800; }
 .flight-result-route { font-size:13px; font-weight:750; }
 .flight-result-meta { color:var(--muted); font-size:10px; margin-top:3px; }
+.flight-result-via { margin-top:5px; font-size:10px; font-weight:650; color:rgba(255,255,255,.72); }
 .flight-result-time { font-size:12px; font-weight:750; white-space:nowrap; }
+.flight-result-leg { font-size:12px; font-weight:750; line-height:1.45; white-space:nowrap; }
+.flight-result-stop { margin:1px 0 2px; font-size:10px; font-weight:500; line-height:1.35; color:rgba(255,255,255,.48); white-space:nowrap; }
 .flight-result-brand { display:flex; justify-content:flex-end; align-items:center; }
 .flight-result-brand img { display:block; width:62px; max-height:23px; object-fit:contain; object-position:right center; }
 .filing-selected { min-height:20px; margin:4px 0 12px; color:var(--muted); font-size:11px; }
@@ -558,7 +561,7 @@ button.primary:hover { background:var(--blue-2); }
 </footer>
 
 <script>
-// Crew Hub v1.24 — signup disabled, flight log details redesign, average landing rate, and flight-log deletion.
+// Crew Hub v1.27 — signup disabled, flight log details redesign, average landing rate, and flight-log deletion.
 const SUPABASE_URL = "https://jvmuvjnfhzejjlkznhra.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_kOn3YWfaMYJOjCoPCLHv1Q_CLup8Waw";
 
@@ -946,6 +949,59 @@ function clearFilingMap() {
   filingMap.setView([55,10],4);
 }
 
+function isTosTrdThroughFlight(sf) {
+  const o = airportForFlight(sf, "dep");
+  const d = airportForFlight(sf, "arr");
+  const oc = String(o?.iata_code || "").toUpperCase();
+  const dc = String(d?.iata_code || "").toUpperCase();
+  return (oc === "TOS" && dc === "TRD") || (oc === "TRD" && dc === "TOS");
+}
+
+function throughLegFlights(sf) {
+  if (!isTosTrdThroughFlight(sf)) return [sf];
+
+  const o = airportForFlight(sf, "dep");
+  const d = airportForFlight(sf, "arr");
+  const oc = String(o?.iata_code || "").toUpperCase();
+  const dc = String(d?.iata_code || "").toUpperCase();
+  const forward = oc === "TOS" && dc === "TRD";
+
+  const firstOrigin = forward ? "TOS" : "TRD";
+  const firstDest = "BOO";
+  const secondOrigin = "BOO";
+  const secondDest = forward ? "TRD" : "TOS";
+
+  const sameFlight = x =>
+    x &&
+    x.active !== false &&
+    String(x.flight_number || "") === String(sf.flight_number || "") &&
+    String(x.aircraft_type_id || "") === String(sf.aircraft_type_id || "") &&
+    String(x.day_of_week ?? "") === String(sf.day_of_week ?? "");
+
+  const candidates = scheduledFlightsCache.filter(s => sameFlight(s));
+  const airportPair = (s, a, b) => {
+    const so = airportForFlight(s, "dep");
+    const sd = airportForFlight(s, "arr");
+    return String(so?.iata_code || "").toUpperCase() === a &&
+           String(sd?.iata_code || "").toUpperCase() === b;
+  };
+
+  const leg1 = candidates.find(s =>
+    airportPair(s, firstOrigin, firstDest) &&
+    formatClockTime(s.scheduled_departure) === formatClockTime(sf.scheduled_departure)
+  );
+
+  const leg2 = candidates.find(s =>
+    airportPair(s, secondOrigin, secondDest) &&
+    formatClockTime(s.scheduled_arrival) === formatClockTime(sf.scheduled_arrival)
+  );
+
+  // Never draw a direct TOS↔TRD line. If the two real operating
+  // legs cannot be resolved, draw no route rather than falling back to
+  // the published through-service row.
+  return leg1 && leg2 ? [leg1, leg2] : [];
+}
+
 function drawSearchMap(results, dep, arr) {
   if (!filingMap) return;
   filingMapLayer.clearLayers();
@@ -955,9 +1011,6 @@ function drawSearchMap(results, dep, arr) {
     if (!a || !Number.isFinite(Number(a.latitude)) || !Number.isFinite(Number(a.longitude))) return;
     const key=String(a.id); if(seen.has(key)) return; seen.add(key);
     const marker = L.circleMarker([Number(a.latitude),Number(a.longitude)], {radius:4, weight:1, opacity:.9, fillOpacity:.9}).addTo(filingMapLayer);
-    // When a single route is being shown, keep the airport name permanently
-    // visible above the airport dot. This is intentionally limited to the
-    // single-route view so the multi-route map does not become cluttered.
     if (results.length === 1) {
       marker.bindTooltip(String(a.name || airportDisplay(a) || "Airport"), {
         permanent:true, direction:"top", offset:[0,-5], className:"filing-airport-label", opacity:1
@@ -966,19 +1019,27 @@ function drawSearchMap(results, dep, arr) {
       marker.bindTooltip(airportDisplay(a), {direction:"top", offset:[0,-4]});
     }
   };
+
+  let drawnSegmentCount = 0;
   results.forEach(sf => {
-    const o=airportForFlight(sf,"dep"), d=airportForFlight(sf,"arr");
-    if(!o || !d || !Number.isFinite(Number(o.latitude)) || !Number.isFinite(Number(d.latitude))) return;
-    L.polyline([[Number(o.latitude),Number(o.longitude)],[Number(d.latitude),Number(d.longitude)]], {weight:2.5, opacity:.78}).addTo(filingMapLayer);
-    airportMarker(o); airportMarker(d);
-    bounds.push([Number(o.latitude),Number(o.longitude)],[Number(d.latitude),Number(d.longitude)]);
+    const segments = throughLegFlights(sf);
+
+    segments.forEach(segment => {
+      const o=airportForFlight(segment,"dep"), d=airportForFlight(segment,"arr");
+      if(!o || !d || !Number.isFinite(Number(o.latitude)) || !Number.isFinite(Number(d.latitude))) return;
+      L.polyline([[Number(o.latitude),Number(o.longitude)],[Number(d.latitude),Number(d.longitude)]], {weight:2.5, opacity:.78}).addTo(filingMapLayer);
+      airportMarker(o); airportMarker(d);
+      bounds.push([Number(o.latitude),Number(o.longitude)],[Number(d.latitude),Number(d.longitude)]);
+      drawnSegmentCount++;
+    });
   });
-  document.getElementById("filingMapWrap").classList.toggle("has-routes", results.length > 0);
+
+  document.getElementById("filingMapWrap").classList.toggle("has-routes", drawnSegmentCount > 0);
   if (bounds.length) filingMap.fitBounds(bounds, {padding:[24,24], maxZoom:6});
   else if (dep || arr) { const a=dep||arr; if(a && Number.isFinite(Number(a.latitude))) filingMap.setView([Number(a.latitude),Number(a.longitude)],6); }
   else filingMap.setView([55,10],4);
-
 }
+
 
 function brandLogoForFlight(sf) {
   const isHoliday = String(sf?.flight_type || "").toLowerCase() === "holidays" || String(sf?.operator || "").toLowerCase() === "holidays";
@@ -1007,6 +1068,37 @@ function uniqueScheduledFlights(flights) {
     return true;
   });
 }
+function minutesBetweenClockTimes(start, end) {
+  const a = String(start || "").match(/^(\\d{1,2}):(\\d{2})/);
+  const b = String(end || "").match(/^(\\d{1,2}):(\\d{2})/);
+  if (!a || !b) return null;
+  let startMin = Number(a[1]) * 60 + Number(a[2]);
+  let endMin = Number(b[1]) * 60 + Number(b[2]);
+  if (endMin < startMin) endMin += 24 * 60;
+  return endMin - startMin;
+}
+
+function throughFlightDisplay(sf) {
+  if (!isTosTrdThroughFlight(sf)) return null;
+  const legs = throughLegFlights(sf);
+  if (legs.length !== 2) return null;
+
+  const leg1 = legs[0], leg2 = legs[1];
+  const a1 = airportForFlight(leg1, "dep"), b1 = airportForFlight(leg1, "arr");
+  const a2 = airportForFlight(leg2, "dep"), b2 = airportForFlight(leg2, "arr");
+  if (!a1 || !b1 || !a2 || !b2) return null;
+
+  return {
+    leg1,
+    leg2,
+    routeCodes: `${a1.iata_code || "?"} → ${b1.iata_code || "?"} → ${b2.iata_code || "?"}`,
+    routeNames: `${a1.name || ""} → ${b1.name || ""} → ${b2.name || ""}`,
+    leg1Label: `Flight ${a1.iata_code || "?"}-${b1.iata_code || "?"}: ${formatClockTime(leg1.scheduled_departure)} – ${formatClockTime(leg1.scheduled_arrival)}`,
+    leg2Label: `Flight ${a2.iata_code || "?"}-${b2.iata_code || "?"}: ${formatClockTime(leg2.scheduled_departure)} – ${formatClockTime(leg2.scheduled_arrival)}`,
+    stopLabel: "Stop time at BOO: 20 minutes"
+  };
+}
+
 function renderFilingResults(results) {
   const container = document.getElementById("filingSearchResults");
   filingSearchResults = uniqueScheduledFlights(results).sort((a,b) => {
@@ -1016,20 +1108,48 @@ function renderFilingResults(results) {
   if (!filingSearchResults.length) {
     container.innerHTML = '<div class="search-results-empty">No eligible scheduled flights match that search for today.</div>'; return;
   }
+
   container.innerHTML = filingSearchResults.map((sf,index) => {
     const o=airportForFlight(sf,"dep"), d=airportForFlight(sf,"arr"), type=aircraftTypeById(sf.aircraft_type_id);
     const depTime = formatClockTime(sf.scheduled_departure);
     const arrTime = formatClockTime(sf.scheduled_arrival);
     const holiday = String(sf?.flight_type || "").toLowerCase() === "holidays" || String(sf?.operator || "").toLowerCase() === "holidays";
+    const throughDisplay = throughFlightDisplay(sf);
+
+    let routeHtml;
+    let timeHtml;
+
+    if (throughDisplay) {
+      routeHtml = `
+        <div class="flight-result-route">${escapeHtml(throughDisplay.routeCodes)}</div>
+        <div class="flight-result-meta">${escapeHtml(throughDisplay.routeNames)}</div>
+        <div class="flight-result-via">Both legs of this flight will be filed when filing this flight</div>`;
+      timeHtml = `
+        <div class="flight-result-leg">${escapeHtml(throughDisplay.leg1Label)}</div>
+        <div class="flight-result-stop">${escapeHtml(throughDisplay.stopLabel)}</div>
+        <div class="flight-result-leg">${escapeHtml(throughDisplay.leg2Label)}</div>`;
+    } else {
+      routeHtml = `
+        <div class="flight-result-route">${escapeHtml(o?.iata_code||"?")} → ${escapeHtml(d?.iata_code||"?")}</div>
+        <div class="flight-result-meta">${escapeHtml(o?.name||"")} → ${escapeHtml(d?.name||"")}</div>`;
+      timeHtml = `<div class="flight-result-time">${escapeHtml(depTime)} – ${escapeHtml(arrTime)}</div>`;
+    }
+
     return `<button type="button" class="flight-result ${String(sf.id)===String(selectedScheduledFlightId)?"selected":""}" data-result-index="${index}">
-      <div><div class="flight-result-route">${escapeHtml(o?.iata_code||"?")} → ${escapeHtml(d?.iata_code||"?")}</div><div class="flight-result-meta">${escapeHtml(o?.name||"")} → ${escapeHtml(d?.name||"")}</div></div>
+      <div>${routeHtml}</div>
       <div><div class="flight-result-number">${escapeHtml(sf.flight_number || "Flight")}</div><div class="flight-result-meta">${escapeHtml(type?.display_name || type?.name || "Aircraft")}</div></div>
-      <div><div class="flight-result-time">${escapeHtml(depTime)} – ${escapeHtml(arrTime)}</div></div>
+      <div>${timeHtml}</div>
       <div class="flight-result-brand"><img src="${brandLogoForFlight(sf)}" alt="${holiday ? "Holidays" : "Nordica"}"></div>
     </button>`;
   }).join("");
-  container.querySelectorAll("[data-result-index]").forEach(btn => btn.addEventListener("click", () => selectFilingFlight(filingSearchResults[Number(btn.dataset.resultIndex)])));
+
+  container.querySelectorAll("[data-result-index]").forEach(btn =>
+    btn.addEventListener("click", () =>
+      selectFilingFlight(filingSearchResults[Number(btn.dataset.resultIndex)])
+    )
+  );
 }
+
 function updateSearchButtonState() {
   const dep = document.getElementById("filingDeparture");
   const arr = document.getElementById("filingArrival");
@@ -1071,12 +1191,18 @@ function searchFilingFlights() {
 function selectFilingFlight(sf) {
   selectedScheduledFlightId=sf.id; renderFilingResults(filingSearchResults);
   const o=airportForFlight(sf,"dep"), d=airportForFlight(sf,"arr");
-  document.getElementById("filingSelectedFlight").textContent=`Selected: ${sf.flight_number||"Flight"} · ${o?.iata_code||"?"} → ${d?.iata_code||"?"} · ${formatClockTime(sf.scheduled_departure)} – ${formatClockTime(sf.scheduled_arrival)}`;
-  // Once a specific flight is selected, the map should show only that flight,
-  // even when the original search used only departure or only arrival.
+  const throughDisplay = throughFlightDisplay(sf);
+  if (throughDisplay) {
+    document.getElementById("filingSelectedFlight").textContent =
+      `Selected: ${sf.flight_number||"Flight"} · ${throughDisplay.routeCodes}`;
+  } else {
+    document.getElementById("filingSelectedFlight").textContent =
+      `Selected: ${sf.flight_number||"Flight"} · ${o?.iata_code||"?"} → ${d?.iata_code||"?"} · ${formatClockTime(sf.scheduled_departure)} – ${formatClockTime(sf.scheduled_arrival)}`;
+  }
   drawSearchMap([sf], o, d);
   populateRegistrations(sf);
 }
+
 function resetRegistrationSelector() {
   const section=document.getElementById("filingRegistrationSection");
   const box=document.getElementById("filingRegistration");
@@ -1251,10 +1377,21 @@ async function submitFlightFiling() {
   const flightDate = isoDateLocal();
   const msg = document.getElementById("filingMessage");
   if (!scheduledFlightId || !registration) { msg.textContent="Select a flight and aircraft registration."; msg.className="filing-message error"; return; }
+
   msg.textContent="Filing flight…"; msg.className="filing-message";
-  const { error } = await sb.rpc("file_my_flight", { p_scheduled_flight_id:Number(scheduledFlightId), p_registration:registration, p_flight_date:flightDate });
+  const { data, error } = await sb.rpc("file_my_flight", {
+    p_scheduled_flight_id:Number(scheduledFlightId),
+    p_registration:registration,
+    p_flight_date:flightDate
+  });
+
   if (error) { msg.textContent=error.message; msg.className="filing-message error"; return; }
-  msg.textContent="Flight filed successfully."; msg.className="filing-message success";
+
+  const filedCount = Number(data?.filed_count || 1);
+  msg.textContent = filedCount === 2
+    ? "Flight filed successfully as two legs."
+    : "Flight filed successfully.";
+  msg.className="filing-message success";
   await loadDashboard();
   closeModal(filingBackdrop);
 }
