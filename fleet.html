@@ -616,6 +616,7 @@ body.special-livery-modal-open {
 .fleet-details-button-wrap{width:100%;display:flex;justify-content:flex-end;margin-top:18px;box-sizing:border-box}
 .fleet-details-button{appearance:none;border:1px solid rgba(126,164,214,.42);background:rgba(28,46,75,.72);color:rgba(255,255,255,.88);border-radius:8px;padding:9px 14px;font:inherit;font-size:13px;cursor:pointer}
 .fleet-details-button:hover{background:rgba(126,164,214,.18);border-color:rgba(126,164,214,.72)}
+.fleet-support-addon{margin-top:6px;margin-bottom:0;text-align:center;color:rgba(255,255,255,.48);font-size:11px;line-height:1.25}
 .fleet-modal{position:fixed;inset:0;z-index:3000;display:none;align-items:center;justify-content:center;padding:24px;background:rgba(0,0,0,.68);backdrop-filter:blur(3px)}
 .fleet-modal.open{display:flex}
 .fleet-modal-content{position:relative;width:min(820px,100%);max-height:min(760px,calc(100vh - 48px));overflow-y:auto;box-sizing:border-box;padding:30px 32px 32px;background:#101C2E;border:1px solid rgba(126,164,214,.28);border-radius:12px;box-shadow:0 20px 60px rgba(0,0,0,.55);color:#fff}
@@ -628,7 +629,7 @@ body.special-livery-modal-open {
 .fleet-table th{color:rgba(255,255,255,.56);font-weight:500;font-size:13px;text-transform:uppercase;letter-spacing:.45px}
 .fleet-table th:first-child,.fleet-table td:first-child{padding-left:10px}
 .fleet-table th:last-child,.fleet-table td:last-child{padding-right:10px}
-.fleet-status-active{color:#8fc7a2}.fleet-status-order{color:#d8b777}
+.fleet-status-active{color:#8fc7a2}.fleet-status-parked{color:rgba(255,255,255,.55)}.fleet-status-order{color:#d8b777}
 .fleet-no-order{margin:0;color:rgba(255,255,255,.55);font-size:15px}
 @media(max-width:620px){.fleet-modal{padding:12px}.fleet-modal-content{padding:26px 18px 22px}.fleet-table th,.fleet-table td{padding:9px 5px;font-size:12px}.fleet-table th{font-size:9px}}
 
@@ -693,7 +694,7 @@ body.special-livery-modal-open {
                     <strong>Charging port</strong>
                 </div>
             
-<div class="fleet-details-button-wrap"><button type="button" class="fleet-details-button" data-fleet-type="crj">Fleet details</button></div>
+<div class="fleet-details-button-wrap"><button type="button" class="fleet-details-button" data-fleet-type="crj">Fleet details</button></div><div class="fleet-support-addon">Supported addon: Aerosoft CRJ series V2.1</div>
 </div>
 
 
@@ -708,7 +709,7 @@ body.special-livery-modal-open {
                 <div class="specification-heading">Specifications</div>
                 <div class="spec-row">
                     <span>In fleet:</span>
-                    <strong>2 aircraft</strong>
+                    <strong>3 aircraft</strong>
                 </div>
                 <div class="spec-row">
                     <span>Capacity:</span>
@@ -725,7 +726,7 @@ body.special-livery-modal-open {
                     <strong>Charging port, inflight WiFi</strong>
                 </div>
 
-<div class="fleet-details-button-wrap"><button type="button" class="fleet-details-button" data-fleet-type="a220">Fleet details</button></div>
+<div class="fleet-details-button-wrap"><button type="button" class="fleet-details-button" data-fleet-type="a220">Fleet details</button></div><div class="fleet-support-addon">Supported addon: Synaptic A220-300</div>
 </div>
 
 
@@ -757,7 +758,7 @@ body.special-livery-modal-open {
                     <strong>Charging port, inflight Wi-Fi</strong>
                 </div>
             
-<div class="fleet-details-button-wrap"><button type="button" class="fleet-details-button" data-fleet-type="max8">Fleet details</button></div>
+<div class="fleet-details-button-wrap"><button type="button" class="fleet-details-button" data-fleet-type="max8">Fleet details</button></div><div class="fleet-support-addon">Supported addon: Ifly Jets 737-MAX8</div>
 </div>
 
 
@@ -854,10 +855,11 @@ document.addEventListener("keydown", event => {
 });
 
 
-const fleetDetails={"a220":{"title":"Airbus A220-300 fleet details","current":[{"reg":"LN-UZA","seat":"Y148","icao":"BCS3","status":"Active"},{"reg":"LN-UZB","seat":"Y148","icao":"BCS3","status":"Active"}],"order":[{"reg":"LN-UZC","seat":"Y148","icao":"BCS3","status":"On order"},{"reg":"LN-UZD","seat":"Y148","icao":"BCS3","status":"On order"},{"reg":"LN-UZE","seat":"Y148","icao":"BCS3","status":"On order"},{"reg":"LN-UZF","seat":"Y148","icao":"BCS3","status":"On order"},{"reg":"LN-UZG","seat":"Y148","icao":"BCS3","status":"On order"},{"reg":"LN-UZH","seat":"Y148","icao":"BCS3","status":"On order"}]},"crj":{"title":"Bombardier CRJ fleet details","current":[{"reg":"LN-ZJA","seat":"Y74","icao":"CRJ7","status":"Active"},{"reg":"LN-ZJB","seat":"Y74","icao":"CRJ7","status":"Active"},{"reg":"LN-ZJD","seat":"Y74","icao":"CRJ7","status":"Active"},{"reg":"LN-ZJG","seat":"Y74","icao":"CRJ7","status":"Active"},{"reg":"LN-CRJ","seat":"Y90","icao":"CRJ9","status":"Active"},{"reg":"LN-CRK","seat":"Y90","icao":"CRJ9","status":"Active"},{"reg":"LN-CRL","seat":"Y90","icao":"CRJ9","status":"Active"},{"reg":"LN-CRM","seat":"Y90","icao":"CRJ9","status":"Active"},{"reg":"LN-CRN","seat":"Y90","icao":"CRJ9","status":"Active"},{"reg":"LN-CRO","seat":"Y90","icao":"CRJ9","status":"Active"},{"reg":"LN-CRP","seat":"Y90","icao":"CRJ9","status":"Active"},{"reg":"LN-CRR","seat":"Y90","icao":"CRJ9","status":"Active"}],"order":[]},"max8":{"title":"Boeing 737-8 MAX fleet details","current":[{"reg":"LN-CSA","seat":"Y178","icao":"B38M","status":"Active"},{"reg":"LN-CSB","seat":"Y178","icao":"B38M","status":"Active"},{"reg":"LN-CSC","seat":"Y178","icao":"B38M","status":"Active"},{"reg":"LN-CSD","seat":"Y178","icao":"B38M","status":"Active"},{"reg":"LN-CSE","seat":"Y178","icao":"B38M","status":"Active"},{"reg":"LN-CSF","seat":"Y178","icao":"B38M","status":"Active"},{"reg":"LN-CSG","seat":"Y178","icao":"B38M","status":"Active"},{"reg":"LN-CSH","seat":"Y178","icao":"B38M","status":"Active"},{"reg":"LN-CSI","seat":"Y178","icao":"B38M","status":"Active"},{"reg":"LN-CSJ","seat":"Y178","icao":"B38M","status":"Active"},{"reg":"LN-CSK","seat":"Y178","icao":"B38M","status":"Active"},{"reg":"LN-CSL","seat":"Y178","icao":"B38M","status":"Active"},{"reg":"LN-CSM","seat":"Y178","icao":"B38M","status":"Active"}],"order":[{"reg":"LN-CSN","seat":"Y178","icao":"B38M","status":"On order"},{"reg":"LN-CSO","seat":"Y178","icao":"B38M","status":"On order"},{"reg":"LN-CSP","seat":"Y178","icao":"B38M","status":"On order"},{"reg":"LN-CSR","seat":"Y178","icao":"B38M","status":"On order"}]}};
+const fleetDetails={"a220":{"title":"Airbus A220-300 fleet details","current":[{"reg":"LN-UZA","seat":"Y148","icao":"BCS3","status":"Active","livery":"Standard"},{"reg":"LN-UZB","seat":"Y148","icao":"BCS3","status":"Active","livery":"Standard"},{"reg":"LN-UZC","seat":"Y148","icao":"BCS3","status":"Active","livery":"Standard"}],"order":[{"reg":"LN-UZD","seat":"Y148","icao":"BCS3","status":"On order","livery":""},{"reg":"LN-UZE","seat":"Y148","icao":"BCS3","status":"On order","livery":""},{"reg":"LN-UZF","seat":"Y148","icao":"BCS3","status":"On order","livery":""},{"reg":"LN-UZG","seat":"Y148","icao":"BCS3","status":"On order","livery":""},{"reg":"LN-UZH","seat":"Y148","icao":"BCS3","status":"On order","livery":""}]},"crj":{"title":"Bombardier CRJ fleet details","current":[{"reg":"LN-ZJA","seat":"Y74","icao":"CRJ7","status":"Active","livery":"Standard"},{"reg":"LN-ZJB","seat":"Y74","icao":"CRJ7","status":"Active","livery":"Standard"},{"reg":"LN-ZJD","seat":"Y74","icao":"CRJ7","status":"Active","livery":"Standard"},{"reg":"LN-ZJG","seat":"Y74","icao":"CRJ7","status":"Active","livery":"Standard"},{"reg":"LN-CRJ","seat":"Y90","icao":"CRJ9","status":"Parked","livery":"Standard"},{"reg":"LN-CRK","seat":"Y90","icao":"CRJ9","status":"Parked","livery":"Standard"},{"reg":"LN-CRL","seat":"Y90","icao":"CRJ9","status":"Active","livery":"Standard"},{"reg":"LN-CRM","seat":"Y90","icao":"CRJ9","status":"Active","livery":"Standard"},{"reg":"LN-CRN","seat":"Y90","icao":"CRJ9","status":"Active","livery":"Standard"},{"reg":"LN-CRO","seat":"Y90","icao":"CRJ9","status":"Active","livery":"Standard"},{"reg":"LN-CRP","seat":"Y90","icao":"CRJ9","status":"Active","livery":"Standard"},{"reg":"LN-CRR","seat":"Y90","icao":"CRJ9","status":"Active","livery":"Standard"}],"order":[]},"max8":{"title":"Boeing 737-8 MAX fleet details","current":[{"reg":"LN-CSA","seat":"Y178","icao":"B38M","status":"Active","livery":"Standard"},{"reg":"LN-CSB","seat":"Y178","icao":"B38M","status":"Active","livery":"Standard"},{"reg":"LN-CSC","seat":"Y178","icao":"B38M","status":"Active","livery":"Standard"},{"reg":"LN-CSD","seat":"Y178","icao":"B38M","status":"Active","livery":"Standard"},{"reg":"LN-CSE","seat":"Y178","icao":"B38M","status":"Active","livery":"Standard"},{"reg":"LN-CSF","seat":"Y178","icao":"B38M","status":"Active","livery":"Standard"},{"reg":"LN-CSG","seat":"Y178","icao":"B38M","status":"Active","livery":"Standard"},{"reg":"LN-CSH","seat":"Y178","icao":"B38M","status":"Active","livery":"Standard"},{"reg":"LN-CSI","seat":"Y178","icao":"B38M","status":"Active","livery":"Standard"},{"reg":"LN-CSJ","seat":"Y178","icao":"B38M","status":"Active","livery":"Standard"},{"reg":"LN-CSK","seat":"Y178","icao":"B38M","status":"Active","livery":"Standard"},{"reg":"LN-CSL","seat":"Y178","icao":"B38M","status":"Active","livery":"Standard"},{"reg":"LN-CSM","seat":"Y178","icao":"B38M","status":"Active","livery":"Holidays"}],"order":[{"reg":"LN-CSN","seat":"Y178","icao":"B38M","status":"On order","livery":""},{"reg":"LN-CSO","seat":"Y178","icao":"B38M","status":"On order","livery":""},{"reg":"LN-CSP","seat":"Y178","icao":"B38M","status":"On order","livery":""},{"reg":"LN-CSR","seat":"Y178","icao":"B38M","status":"On order","livery":""}]}};
 const fm=document.getElementById("fleet-modal"),fc=document.getElementById("fleet-modal-close"),ft=document.getElementById("fleet-modal-title"),fb=document.getElementById("fleet-modal-body");
-function fleetRows(a){return a.map(x=>`<tr><td>${x.reg}</td><td>${x.seat}</td><td>${x.icao}</td><td class="${x.status==="Active"?"fleet-status-active":"fleet-status-order"}">${x.status}</td></tr>`).join("")}
-function openFleetDetails(t){const d=fleetDetails[t];if(!d)return;ft.textContent=d.title;fb.innerHTML=`<h3 class="fleet-section-title">Current fleet</h3><table class="fleet-table"><thead><tr><th>Registration</th><th>Seat Config</th><th>ICAO code</th><th>Status</th></tr></thead><tbody>${fleetRows(d.current)}</tbody></table><h3 class="fleet-section-title">Aircraft on order</h3>${d.order.length?`<table class="fleet-table"><thead><tr><th>Registration</th><th>Seat Config</th><th>ICAO code</th><th>Status</th></tr></thead><tbody>${fleetRows(d.order)}</tbody></table>`:`<p class="fleet-no-order">No aircraft currently on order.</p>`}`;fm.classList.add("open");fm.setAttribute("aria-hidden","false")}
+function fleetRows(a){return a.map(x=>{const statusClass=x.status==="Active"?"fleet-status-active":x.status==="Parked"?"fleet-status-parked":"fleet-status-order";return `<tr><td>${x.reg}</td><td>${x.seat}</td><td>${x.icao}</td><td>${x.livery||""}</td><td class="${statusClass}">${x.status}</td></tr>`}).join("")}
+function fleetTable(a){return `<table class="fleet-table"><thead><tr><th>Registration</th><th>Seat Config</th><th>ICAO code</th><th>Livery</th><th>Status</th></tr></thead><tbody>${fleetRows(a)}</tbody></table>`}
+function openFleetDetails(t){const d=fleetDetails[t];if(!d)return;ft.textContent=d.title;fb.innerHTML=`<h3 class="fleet-section-title">Current fleet</h3>${fleetTable(d.current)}<h3 class="fleet-section-title">Aircraft on order</h3>${d.order.length?fleetTable(d.order):`<p class="fleet-no-order">No aircraft currently on order.</p>`}`;fm.classList.add("open");fm.setAttribute("aria-hidden","false")}
 function closeFleetDetails(){fm.classList.remove("open");fm.setAttribute("aria-hidden","true")}
 document.querySelectorAll(".fleet-details-button").forEach(b=>b.addEventListener("click",()=>openFleetDetails(b.dataset.fleetType)));
 fc.addEventListener("click",closeFleetDetails);fm.addEventListener("click",e=>{if(e.target===fm)closeFleetDetails()});document.addEventListener("keydown",e=>{if(e.key==="Escape"&&fm.classList.contains("open"))closeFleetDetails()});
