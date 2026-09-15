@@ -1533,13 +1533,25 @@ function openFlightDetails(index) {
   const landingRaw = logValue(log, ["landing_rate","landing_rate_fpm","landing_rate_fpm_abs"]);
   const landingValue = landingRaw === null ? "—" : `${Number(landingRaw).toFixed(0)} fpm`;
 
+const formatActualTime = (value) => {
+  if (!value) return "—";
+
+  const match = String(value).match(/T(\d{2}):(\d{2})/);
+
+  if (match) {
+    return `${match[1]}:${match[2]}`;
+  }
+
+  return String(value);
+};
+
   const fields = [
   ["Date", logValue(log, ["flight_date","operating_date","date","created_at"])],
   ["Registration", logValue(log, ["registration"])],
   ["Scheduled departure", logValue(log, ["scheduled_departure"]) ?? sf?.scheduled_departure],
   ["Scheduled arrival", logValue(log, ["scheduled_arrival"]) ?? sf?.scheduled_arrival],
-  ["Actual departure", formatClockTime(logValue(log, ["actual_departure_at","actual_departure","off_block_time"]))],
-  ["Actual arrival", formatClockTime(logValue(log, ["actual_landing_at","actual_arrival","actual_arrival_at","on_block_time"]))],
+  ["Actual departure", formatActualTime(logValue(log, ["actual_departure_at","actual_departure","off_block_time"]))],
+["Actual arrival", formatActualTime(logValue(log, ["actual_landing_at","actual_arrival","actual_arrival_at","on_block_time"]))],
   ["Landing rate", landingValue],
   ["Status", logValue(log, ["status","acars_state"])],
   ["Validation", logValue(log, ["acars_validation_status","validation_status"])],
