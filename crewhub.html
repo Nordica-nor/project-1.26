@@ -1538,11 +1538,11 @@ function openFlightDetails(index) {
     ["Registration", logValue(log, ["registration"])],
     ["Scheduled departure", logValue(log, ["scheduled_departure"]) ?? sf?.scheduled_departure],
     ["Scheduled arrival", logValue(log, ["scheduled_arrival"]) ?? sf?.scheduled_arrival],
-    ["Actual departure", logValue(log, ["actual_departure","actual_departure_at","off_block_time"])],
-    ["Actual arrival", logValue(log, ["actual_arrival","actual_arrival_at","on_block_time"])],
-    ["Landing rate", landingValue],
-    ["Status", logValue(log, ["status", "acars_state"])],
-["Validation", logValue(log, ["validation_status", "acars_validation_status"])],
+    ["Actual departure", formatClockTime(logValue(log, ["actual_departure","actual_departure_at","off_block_time"]))],
+["Actual arrival", formatClockTime(logValue(log, ["actual_arrival","actual_arrival_at","on_block_time","actual_landing_at"]))],
+["Landing rate", landingValue],
+["Status", logValue(log, ["status", "acars_state"])],
+["Validation", logValue(log, ["validation_status","acars_validation_status"])],
     ["Fuel burned", logValue(log, ["fuel_burned","fuel_burned_kg","fuel_used","fuel_used_kg"])]
   ];
 
