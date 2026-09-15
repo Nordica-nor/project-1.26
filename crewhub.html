@@ -1541,8 +1541,8 @@ function openFlightDetails(index) {
     ["Actual departure", logValue(log, ["actual_departure","actual_departure_at","off_block_time"])],
     ["Actual arrival", logValue(log, ["actual_arrival","actual_arrival_at","on_block_time"])],
     ["Landing rate", landingValue],
-    ["Status", logValue(log, ["status"])],
-    ["Validation", logValue(log, ["validation_status"])],
+    ["Status", logValue(log, ["status", "acars_state"])],
+["Validation", logValue(log, ["validation_status", "acars_validation_status"])],
     ["Fuel burned", logValue(log, ["fuel_burned","fuel_burned_kg","fuel_used","fuel_used_kg"])]
   ];
 
