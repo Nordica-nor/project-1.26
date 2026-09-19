@@ -144,7 +144,7 @@ button.primary:hover { background:var(--blue-2); }
     padding:22px; background:rgba(2,7,14,.76); backdrop-filter:blur(9px);
 }
 .modal {
-    width:min(680px,100%); max-height:min(88vh,820px); overflow:auto;
+    width:min(1080px,96vw); max-height:min(88vh,820px); overflow:auto;
     background:linear-gradient(180deg,#14243b,#101d30);
     border:1px solid rgba(255,255,255,.11); border-radius:18px;
     box-shadow:0 30px 90px rgba(0,0,0,.42); padding:25px;
@@ -157,7 +157,16 @@ button.primary:hover { background:var(--blue-2); }
     background:rgba(255,255,255,.045); color:rgba(255,255,255,.8); cursor:pointer; font-size:19px; line-height:1;
 }
 .close-button:hover { background:rgba(255,255,255,.08); color:#fff; }
-.modal-grid { display:grid; grid-template-columns:1fr 1fr; gap:0 22px; }
+.modal-grid { display:grid; grid-template-columns:minmax(300px,0.9fr) minmax(420px,1.25fr); gap:24px; align-items:stretch; }
+.detail-fields { display:grid; grid-template-columns:1fr 1fr; gap:0 22px; align-content:start; }
+.flight-path-map { min-height:390px; height:100%; min-width:0; border-radius:14px; overflow:hidden; border:1px solid rgba(255,255,255,.10); background:#0b1f34; }
+.flight-path-map .leaflet-control-attribution { font-size:8px !important; }
+.flight-path-status { display:flex; align-items:center; justify-content:center; height:100%; min-height:390px; color:var(--muted); font-size:12px; text-align:center; padding:20px; }
+@media (max-width: 820px) {
+    .modal { width:min(96vw,680px); }
+    .modal-grid { grid-template-columns:1fr; }
+    .flight-path-map { min-height:320px; }
+}
 .modal-field { padding:11px 0; border-bottom:1px solid rgba(255,255,255,.07); }
 .modal-field-label { color:var(--muted); font-size:11px; margin-bottom:4px; }
 .modal-field-value { font-size:13px; font-weight:650; line-height:1.4; word-break:break-word; }
@@ -380,7 +389,7 @@ button.primary:hover { background:var(--blue-2); }
             <a class="nav-button" href="index.html">Home</a>
             <a class="nav-button" href="network.html">Network</a>
             <a class="nav-button" href="fleet.html">Fleet</a>
-            <a class="nav-button" href="LiveMap.html">Live Map</a>
+            <a class="nav-button" href="live-map.html">Live Map</a>
             <a class="nav-button active" href="crewhub.html">Crew Hub</a>
         </nav>
   </div>
@@ -1501,6 +1510,101 @@ async function loadFlightHistory() {
   aircraftTypesCache = typeRes.data || aircraftTypesCache;
   renderFlightHistory();
 }
+let historicalFlightMap = null;
+let historicalFlightPath = null;
+let historicalFlightOriginMarker = null;
+let historicalFlightDestinationMarker = null;
+
+function clearHistoricalFlightMap() {
+  if (historicalFlightMap) {
+    historicalFlightMap.remove();
+    historicalFlightMap = null;
+  }
+  historicalFlightPath = null;
+  historicalFlightOriginMarker = null;
+  historicalFlightDestinationMarker = null;
+}
+
+async function loadHistoricalFlightPath(flightLogId, ctx) {
+  const mapContainer = document.getElementById("flightPathMap");
+  if (!mapContainer) return;
+
+  clearHistoricalFlightMap();
+
+  historicalFlightMap = L.map(mapContainer, {
+    zoomControl: true,
+    attributionControl: true,
+    minZoom: 2,
+    maxZoom: 12
+  }).setView([55, 10], 4);
+
+  L.tileLayer(
+    "https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png?key=cb1_2iwu_1_adb61a81e14a92adac6dcc13",
+    {
+      subdomains: "abcd",
+      maxZoom: 20,
+      minZoom: 0,
+      attribution:
+        '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+    }
+  ).addTo(historicalFlightMap);
+
+  historicalFlightMap.whenReady(() => historicalFlightMap.invalidateSize());
+
+  const { data, error } = await sb.rpc("get_flight_telemetry", {
+    p_flight_log_id: Number(flightLogId)
+  });
+
+  if (error) {
+    mapContainer.innerHTML = `<div class="flight-path-status">Flight path could not be loaded.</div>`;
+    console.error("Historical flight telemetry error:", error);
+    return;
+  }
+
+  const points = (data || [])
+    .filter(p => Number.isFinite(Number(p.latitude)) && Number.isFinite(Number(p.longitude)))
+    .map(p => [Number(p.latitude), Number(p.longitude)]);
+
+  if (!points.length) {
+    mapContainer.innerHTML = `<div class="flight-path-status">No recorded flight path is available for this flight.</div>`;
+    return;
+  }
+
+  historicalFlightPath = L.polyline(points, {
+    color: "#4671b8",
+    weight: 3,
+    opacity: 0.95,
+    lineJoin: "round",
+    lineCap: "round"
+  }).addTo(historicalFlightMap);
+
+  if (ctx.origin && Number.isFinite(Number(ctx.origin.latitude)) && Number.isFinite(Number(ctx.origin.longitude))) {
+    historicalFlightOriginMarker = L.circleMarker(
+      [Number(ctx.origin.latitude), Number(ctx.origin.longitude)],
+      { radius: 5, weight: 2, color: "#ffffff", fillColor: "#4671b8", fillOpacity: 1 }
+    ).addTo(historicalFlightMap);
+  }
+
+  if (ctx.dest && Number.isFinite(Number(ctx.dest.latitude)) && Number.isFinite(Number(ctx.dest.longitude))) {
+    historicalFlightDestinationMarker = L.circleMarker(
+      [Number(ctx.dest.latitude), Number(ctx.dest.longitude)],
+      { radius: 5, weight: 2, color: "#ffffff", fillColor: "#4671b8", fillOpacity: 1 }
+    ).addTo(historicalFlightMap);
+  }
+
+  const bounds = L.latLngBounds(points);
+  if (bounds.isValid()) {
+    historicalFlightMap.fitBounds(bounds, {
+      padding: [28, 28],
+      maxZoom: 7
+    });
+  }
+
+  setTimeout(() => {
+    if (historicalFlightMap) historicalFlightMap.invalidateSize();
+  }, 80);
+}
+
 function openFlightDetails(index) {
   const log = flightLogsCache[index];
   if (!log) return;
@@ -1534,38 +1638,34 @@ function openFlightDetails(index) {
   const landingRaw = logValue(log, ["landing_rate","landing_rate_fpm","landing_rate_fpm_abs"]);
   const landingValue = landingRaw === null ? "—" : `${Number(landingRaw).toFixed(0)} fpm`;
 
-const formatActualTime = (value) => {
-  if (!value) return "—";
-
-  const match = String(value).match(/T(\d{2}):(\d{2})/);
-
-  if (match) {
-    return `${match[1]}:${match[2]}`;
-  }
-
-  return String(value);
-};
-
   const fields = [
-  ["Date", logValue(log, ["flight_date","operating_date","date","created_at"])],
-  ["Registration", logValue(log, ["registration"])],
-  ["Scheduled departure", logValue(log, ["scheduled_departure"]) ?? sf?.scheduled_departure],
-  ["Scheduled arrival", logValue(log, ["scheduled_arrival"]) ?? sf?.scheduled_arrival],
-  ["Actual departure", formatActualTime(logValue(log, ["actual_departure_at","actual_departure","off_block_time"]))],
-["Actual arrival", formatActualTime(logValue(log, ["actual_landing_at","actual_arrival","actual_arrival_at","on_block_time"]))],
-  ["Landing rate", landingValue],
-  ["Status", logValue(log, ["status","acars_state"])],
-  ["Validation", logValue(log, ["acars_validation_status","validation_status"])],
-  ["Fuel burned", logValue(log, ["fuel_burned","fuel_burned_kg","fuel_used","fuel_used_kg"])]
-];
+    ["Date", logValue(log, ["flight_date","operating_date","date","created_at"])],
+    ["Registration", logValue(log, ["registration"])],
+    ["Scheduled departure", logValue(log, ["scheduled_departure"]) ?? sf?.scheduled_departure],
+    ["Scheduled arrival", logValue(log, ["scheduled_arrival"]) ?? sf?.scheduled_arrival],
+    ["Actual departure", logValue(log, ["actual_departure","actual_departure_at","off_block_time"])],
+    ["Actual arrival", logValue(log, ["actual_arrival","actual_arrival_at","on_block_time"])],
+    ["Landing rate", landingValue],
+    ["Status", logValue(log, ["status"])],
+    ["Validation", logValue(log, ["validation_status"])],
+    ["Fuel burned", logValue(log, ["fuel_burned","fuel_burned_kg","fuel_used","fuel_used_kg"])]
+  ];
 
   const grid = document.getElementById("detailModalGrid");
-  grid.innerHTML = fields.map(([label,value]) =>
-    `<div class="modal-field"><div class="modal-field-label">${escapeHtml(label)}</div><div class="modal-field-value">${escapeHtml(value === null || value === undefined || value === "" ? "—" : value)}</div></div>`
-  ).join("");
+  grid.innerHTML = `
+    <div class="detail-fields">
+      ${fields.map(([label,value]) =>
+        `<div class="modal-field"><div class="modal-field-label">${escapeHtml(label)}</div><div class="modal-field-value">${escapeHtml(value === null || value === undefined || value === "" ? "—" : value)}</div></div>`
+      ).join("")}
+    </div>
+    <div id="flightPathMap" class="flight-path-map">
+      <div class="flight-path-status">Loading flight path…</div>
+    </div>`;
 
   document.getElementById("deleteFlightBtn").dataset.flightLogId = String(log.id);
   openModal(detailBackdrop);
+
+  loadHistoricalFlightPath(log.id, ctx);
 }
 
 async function deleteFlightLog() {
@@ -1612,7 +1712,10 @@ async function deleteFlightLog() {
 
 document.getElementById("openFilingBtn").addEventListener("click", openFilingModal);
 document.getElementById("closeFilingBtn").addEventListener("click", () => closeModal(filingBackdrop));
-document.getElementById("closeDetailBtn").addEventListener("click", () => closeModal(detailBackdrop));
+document.getElementById("closeDetailBtn").addEventListener("click", () => {
+  clearHistoricalFlightMap();
+  closeModal(detailBackdrop);
+});
 document.getElementById("deleteFlightBtn").addEventListener("click", deleteFlightLog);
 filingBackdrop.addEventListener("click", e => { if (e.target === filingBackdrop) closeModal(filingBackdrop); });
 detailBackdrop.addEventListener("click", e => { if (e.target === detailBackdrop) closeModal(detailBackdrop); });
