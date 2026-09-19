@@ -16172,30 +16172,73 @@ function renderRouteCalendar() {
         );
         if (!Number.isFinite(day)) return;
 
-        dayButton.addEventListener("mouseenter", () => {
-            showRouteCalendarTooltip(
-                dayButton,
-                scheduleCalendarYear,
-                scheduleCalendarMonth,
-                day
-            );
-        });
+        const today = getScheduleToday();
+        const isPast =
+            scheduleCalendarYear < today.year ||
+            (scheduleCalendarYear === today.year &&
+             scheduleCalendarMonth === today.month &&
+             day < today.day);
+
+        if (!isPast) {
+            dayButton.addEventListener("mouseenter", () => {
+                showRouteCalendarTooltip(
+                    dayButton,
+                    scheduleCalendarYear,
+                    scheduleCalendarMonth,
+                    day
+                );
+            });
+
+            dayButton.addEventListener("focus", () => {
+                showRouteCalendarTooltip(
+                    dayButton,
+                    scheduleCalendarYear,
+                    scheduleCalendarMonth,
+                    day
+                );
+            });
+        }
 
         dayButton.addEventListener("mouseleave", hideRouteCalendarTooltip);
-
-        dayButton.addEventListener("focus", () => {
-            showRouteCalendarTooltip(
-                dayButton,
-                scheduleCalendarYear,
-                scheduleCalendarMonth,
-                day
-            );
-        });
-
         dayButton.addEventListener("blur", hideRouteCalendarTooltip);
     });
 
     updateRouteCalendarMonthButtons();
+}
+
+function getRouteCalendarNavigationMonths() {
+    const today = getScheduleToday();
+    const months = [];
+
+    // Allow the current month plus the next 12 months.
+    // For seasonal routes, only keep months that actually contain
+    // at least one scheduled flight on this route.
+    for (let offset = 0; offset <= 12; offset++) {
+        const date = new Date(today.year, today.month + offset, 1);
+        const year = date.getFullYear();
+        const month = date.getMonth();
+
+        if (isSeasonalWinterRoute()) {
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            let monthHasFlights = false;
+
+            for (let day = 1; day <= daysInMonth; day++) {
+                if (
+                    getFlightsForDate("outbound", year, month, day).length > 0 ||
+                    getFlightsForDate("inbound", year, month, day).length > 0
+                ) {
+                    monthHasFlights = true;
+                    break;
+                }
+            }
+
+            if (!monthHasFlights) continue;
+        }
+
+        months.push({ year, month });
+    }
+
+    return months;
 }
 
 function updateRouteCalendarMonthButtons() {
@@ -16204,67 +16247,46 @@ function updateRouteCalendarMonthButtons() {
 
     if (!prev || !next) return;
 
-    if (isSeasonalWinterRoute()) {
-        const months = getSeasonalWinterCalendarMonths();
-        const idx = months.findIndex(m =>
-            m.year === scheduleCalendarYear && m.month === scheduleCalendarMonth
-        );
+    const months = getRouteCalendarNavigationMonths();
+    const idx = months.findIndex(m =>
+        m.year === scheduleCalendarYear && m.month === scheduleCalendarMonth
+    );
 
-        prev.classList.toggle("hidden", idx <= 0);
-        next.classList.toggle("hidden", idx < 0 || idx >= months.length - 1);
-        return;
-    }
-
-    const currentIndex =
-        getScheduleMonthIndex(scheduleCalendarYear, scheduleCalendarMonth);
-    const minIndex = 0;
-    const max = getScheduleMaxDate();
-    const maxIndex = getScheduleMonthIndex(max.year, max.month);
-
-    prev.classList.toggle("hidden", currentIndex <= minIndex);
-    next.classList.toggle("hidden", currentIndex >= maxIndex);
+    prev.classList.toggle("hidden", idx <= 0);
+    next.classList.toggle(
+        "hidden",
+        idx < 0 || idx >= months.length - 1
+    );
 }
 
 function changeRouteCalendarMonth(delta) {
     hideRouteCalendarTooltip();
 
-    if (isSeasonalWinterRoute()) {
-        const months = getSeasonalWinterCalendarMonths();
-        let idx = months.findIndex(m =>
-            m.year === scheduleCalendarYear && m.month === scheduleCalendarMonth
-        );
+    const months = getRouteCalendarNavigationMonths();
 
-        if (idx < 0) idx = 0;
+    let idx = months.findIndex(m =>
+        m.year === scheduleCalendarYear && m.month === scheduleCalendarMonth
+    );
 
-        const nextIndex = idx + delta;
-        if (nextIndex < 0 || nextIndex >= months.length) return;
-
-        scheduleCalendarYear = months[nextIndex].year;
-        scheduleCalendarMonth = months[nextIndex].month;
-    } else {
-        let month = scheduleCalendarMonth + delta;
-        let year = scheduleCalendarYear;
-
-        if (month < 0) {
-            month = 11;
-            year--;
-        } else if (month > 11) {
-            month = 0;
-            year++;
-        }
-
-        const newIndex = getScheduleMonthIndex(year, month);
-        const max = getScheduleMaxDate();
-        const maxIndex = getScheduleMonthIndex(max.year, max.month);
-
-        if (newIndex < 0 || newIndex > maxIndex) return;
-
-        scheduleCalendarYear = year;
-        scheduleCalendarMonth = month;
+    if (idx < 0) {
+        idx = 0;
     }
+
+    const nextIndex = idx + delta;
+
+    if (nextIndex < 0 || nextIndex >= months.length) {
+        return;
+    }
+
+    scheduleCalendarYear = months[nextIndex].year;
+    scheduleCalendarMonth = months[nextIndex].month;
 
     renderRouteCalendar();
 }
+
+// The route calendar is rendered dynamically with inline arrow handlers.
+// Expose the local function on window so those handlers can call it.
+window.changeRouteCalendarMonth = changeRouteCalendarMonth;
 
 function renderScheduleDirection(direction) {
     const view = document.getElementById(
