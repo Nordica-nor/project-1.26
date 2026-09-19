@@ -1419,6 +1419,13 @@ function formatDateValue(value) {
   const d = new Date(value);
   return Number.isNaN(d.getTime()) ? String(value) : d.toLocaleDateString(undefined,{day:"2-digit",month:"short",year:"numeric"});
 }
+function formatTimeValue(value) {
+  if (!value) return "—";
+  const d = new Date(value);
+  return Number.isNaN(d.getTime())
+    ? String(value).slice(0, 5)
+    : d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hour12: false });
+}
 function logValue(log, names) {
   for (const name of names) {
     if (log[name] !== null && log[name] !== undefined && log[name] !== "") return log[name];
@@ -1643,8 +1650,8 @@ function openFlightDetails(index) {
     ["Registration", logValue(log, ["registration"])],
     ["Scheduled departure", logValue(log, ["scheduled_departure"]) ?? sf?.scheduled_departure],
     ["Scheduled arrival", logValue(log, ["scheduled_arrival"]) ?? sf?.scheduled_arrival],
-    ["Actual departure", logValue(log, ["actual_departure","actual_departure_at","off_block_time"])],
-    ["Actual arrival", logValue(log, ["actual_arrival","actual_arrival_at","on_block_time"])],
+    ["Actual departure", formatTimeValue(logValue(log, ["actual_departure_at","actual_departure","off_block_time"]))],
+    ["Actual arrival", formatTimeValue(logValue(log, ["actual_landing_at","actual_arrival_at","actual_arrival","on_block_time","actual_completion_at","completed_at"]))],
     ["Landing rate", landingValue],
     ["Status", logValue(log, ["status"])],
     ["Validation", logValue(log, ["validation_status"])],
