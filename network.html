@@ -2733,7 +2733,7 @@ const airports = {
    ROUTES
    ========================================================== */
 
-const routes = [
+const legacyRoutes = [
     // OSL
     { from: "OSL", to: "BGO" , flightTime: "00:55", aircraftType: "Boeing 737-8 MAX / Bombardier CRJ" , season: "Year-round" , frequency: "Daily" },
     { from: "OSL", to: "BLL", flightTime: "01:10", aircraftType: "Bombardier CRJ", season: "Year-round" },
@@ -2872,6 +2872,225 @@ const routes = [
     { from: "LPA", to: "AAL", flightTime: "05:20", aircraftType: "Boeing 737-8 MAX", startWeek: 42, endWeek: 15, season: "October - April", frequency: "Mon", flightType: "Combined flight" },
     { from: "SVG", to: "TFS" , flightTime: "05:20", seasonal: true, seasonStart: "October", seasonEnd: "April", aircraftType: "Boeing 737-8 MAX" , startWeek: 42, endWeek: 15, season: "October - April" , frequency: "Sat" , flightType: "Combined flight" }
 ];
+
+
+let routes = [];
+let networkScheduleRows = [];
+let networkScheduleMap = new Map();
+
+const SUPABASE_URL = "https://jvmuvjnfhzejjlkznhra.supabase.co";
+const SUPABASE_KEY = "sb_publishable_kOn3YWfaMYJOjCoPCLHv1Q_CLup8Waw";
+
+async function fetchAllRows(table, select = "*") {
+    const pageSize = 1000;
+    const rows = [];
+
+    for (let from = 0; ; from += pageSize) {
+        const response = await fetch(
+            `${SUPABASE_URL}/rest/v1/${table}?select=${encodeURIComponent(select)}&limit=${pageSize}&offset=${from}`,
+            {
+                headers: {
+                    apikey: SUPABASE_KEY,
+                    Authorization: `Bearer ${SUPABASE_KEY}`
+                }
+            }
+        );
+
+        if (!response.ok) {
+            throw new Error(`${table}: HTTP ${response.status}`);
+        }
+
+        const page = await response.json();
+        rows.push(...page);
+
+        if (page.length < pageSize) break;
+    }
+
+    return rows;
+}
+
+function minutesBetweenTimes(departure, arrival) {
+    if (!departure || !arrival) return null;
+
+    const [dh, dm] = String(departure).split(":").map(Number);
+    const [ah, am] = String(arrival).split(":").map(Number);
+
+    if (![dh, dm, ah, am].every(Number.isFinite)) return null;
+
+    let minutes = (ah * 60 + am) - (dh * 60 + dm);
+    if (minutes < 0) minutes += 24 * 60;
+    return minutes;
+}
+
+function formatDurationMinutes(minutes) {
+    if (!Number.isFinite(minutes)) return "";
+    const h = Math.floor(minutes / 60);
+    const m = minutes % 60;
+    return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+}
+
+function aircraftDisplayName(aircraftType) {
+    return aircraftType?.name || aircraftType?.icao_code || "";
+}
+
+function scheduleRowsToRouteObject(groupRows, depAirport, arrAirport) {
+    const legacy = legacyRoutes.find(r =>
+        r.from === depAirport.iata_code && r.to === arrAirport.iata_code
+    ) || {};
+
+    const durations = groupRows
+        .map(r => minutesBetweenTimes(r.scheduled_departure, r.scheduled_arrival))
+        .filter(Number.isFinite);
+
+    const duration = durations.length
+        ? durations[Math.floor(durations.length / 2)]
+        : null;
+
+    const aircraftNames = [...new Set(
+        groupRows.map(r => aircraftDisplayName(r.aircraftType)).filter(Boolean)
+    )];
+
+    const operatingDays = [...new Set(groupRows.map(r => Number(r.day_of_week)).filter(Boolean))]
+        .sort((a, b) => a - b);
+
+    const dayLabels = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+    const frequency = operatingDays.map(day => dayLabels[day - 1]).join(" · ");
+
+    const weekLimited = groupRows.filter(r =>
+        r.operating_start_week != null || r.operating_end_week != null
+    );
+
+    let season = legacy.season || "Year-round";
+
+    if (weekLimited.length === groupRows.length && weekLimited.length) {
+        const starts = weekLimited.map(r => Number(r.operating_start_week)).filter(Number.isFinite);
+        const ends = weekLimited.map(r => Number(r.operating_end_week)).filter(Number.isFinite);
+        const startWeek = starts.length ? Math.min(...starts) : null;
+        const endWeek = ends.length ? Math.max(...ends) : null;
+
+        if (startWeek != null && endWeek != null) {
+            if (startWeek > endWeek) season = `Week ${startWeek} - Week ${endWeek}`;
+            else season = `Week ${startWeek} - Week ${endWeek}`;
+        }
+    } else if (weekLimited.length && legacy.season && legacy.season !== "Year-round") {
+        season = legacy.season;
+    }
+
+    const holidays = groupRows.some(r => String(r.flight_type) === "Holidays");
+    const regular = groupRows.some(r => String(r.flight_type) === "Regular");
+
+    return {
+        ...legacy,
+        from: depAirport.iata_code,
+        to: arrAirport.iata_code,
+        flightTime: legacy.flightTime || formatDurationMinutes(duration),
+        aircraftType: aircraftNames.join(" / ") || legacy.aircraftType || "",
+        season,
+        frequency: legacy.frequency || frequency,
+        holidays: holidays && !regular,
+        yearRound: !weekLimited.length || weekLimited.length < groupRows.length,
+        _scheduleRows: groupRows,
+        _hasHolidaysFlights: holidays,
+        _hasRegularFlights: regular
+    };
+}
+
+async function loadNetworkData() {
+    // The public Network page is not authenticated, while the four source
+    // tables are intentionally restricted to authenticated users by RLS.
+    // Read the database through the security-definer RPC instead of trying
+    // to query those tables directly from the browser.
+    const response = await fetch(
+        `${SUPABASE_URL}/rest/v1/rpc/get_network_data`,
+        {
+            method: "POST",
+            headers: {
+                apikey: SUPABASE_KEY,
+                Authorization: `Bearer ${SUPABASE_KEY}`,
+                "Content-Type": "application/json"
+            },
+            body: "{}"
+        }
+    );
+
+    if (!response.ok) {
+        throw new Error(`get_network_data: HTTP ${response.status}`);
+    }
+
+    const networkData = await response.json();
+    const airportRows = networkData.airports || [];
+    const routeRows = networkData.routes || [];
+    const aircraftTypes = networkData.aircraft_types || [];
+    networkScheduleRows = networkData.scheduled_flights || [];
+
+    const airportById = new Map(airportRows.map(a => [Number(a.id), a]));
+    const aircraftById = new Map(aircraftTypes.map(a => [Number(a.id), a]));
+
+    const activeRoutes = routeRows.filter(r => r.active !== false);
+    const activeSchedules = networkScheduleRows
+        .filter(r => r.active !== false)
+        .map(r => ({
+            ...r,
+            aircraftType: aircraftById.get(Number(r.aircraft_type_id)) || null
+        }));
+
+    networkScheduleRows = activeSchedules;
+
+    const byRouteId = new Map();
+    activeSchedules.forEach(row => {
+        const key = Number(row.route_id);
+        if (!byRouteId.has(key)) byRouteId.set(key, []);
+        byRouteId.get(key).push(row);
+    });
+
+    const groupedDirections = new Map();
+
+    activeRoutes.forEach(route => {
+        const dep = airportById.get(Number(route.origin_airport_id));
+        const arr = airportById.get(Number(route.destination_airport_id));
+        if (!dep?.iata_code || !arr?.iata_code) return;
+
+        const rows = byRouteId.get(Number(route.id)) || [];
+        if (!rows.length) return;
+
+        const key = `${dep.iata_code}-${arr.iata_code}`;
+        if (!groupedDirections.has(key)) groupedDirections.set(key, []);
+        groupedDirections.get(key).push(...rows);
+    });
+
+    routes = [];
+    networkScheduleMap = new Map();
+
+    for (const route of activeRoutes) {
+        const dep = airportById.get(Number(route.origin_airport_id));
+        const arr = airportById.get(Number(route.destination_airport_id));
+        if (!dep?.iata_code || !arr?.iata_code) continue;
+
+        const key = `${dep.iata_code}-${arr.iata_code}`;
+        const groupRows = groupedDirections.get(key) || [];
+
+        if (!networkScheduleMap.has(key)) {
+            networkScheduleMap.set(key, groupRows);
+            routes.push(scheduleRowsToRouteObject(groupRows, dep, arr));
+        }
+    }
+
+    // Preserve route metadata for any legacy route that has a special UI
+    // property not represented by the timetable tables (for example a
+    // published future-start label), while keeping schedules themselves in DB.
+    routes = routes.map(route => {
+        const legacy = legacyRoutes.find(r => r.from === route.from && r.to === route.to) || {};
+        return {
+            ...legacy,
+            ...route,
+            _scheduleRows: networkScheduleMap.get(`${route.from}-${route.to}`) || []
+        };
+    });
+}
+
+;(async function initNetwork() {
+    try {
+        await loadNetworkData();
 
 
 /* ==========================================================
@@ -3939,12 +4158,6 @@ function selectAirport(code) {
 }
 
 function renderAirportDestinations(code) {
-    // Destination rendering is kept in selectAirport's existing logic.
-    // This function is replaced by the destination renderer injected below.
-}
-
-
-function renderAirportDestinations(code) {
 
     selectedAirportCode = code;
     selectedRouteKey = null;
@@ -3971,24 +4184,44 @@ function renderAirportDestinations(code) {
         route.from === code || route.to === code
     );
 
-    const destinationEntries = connectedRoutes.map(route => {
+    /*
+       A route can exist in both directions in the database. For the
+       Destinations tab, however, each airport should only appear once.
+       Merge all connected route records by destination airport and keep
+       the combined Regular/Holidays information for that destination.
+    */
+    const destinationMap = new Map();
 
+    connectedRoutes.forEach(route => {
         const destinationCode =
             route.from === code ? route.to : route.from;
 
         const destination = airports[destinationCode];
+        if (!destination) return;
 
         const hasHolidaysFlights = routeHasHolidaysFlights(route);
         const hasRegularFlights = routeHasRegularFlights(route);
 
-        return {
-            code: destinationCode,
-            airport: destination,
-            holidays: route.holidays || false,
-            mixed: hasHolidaysFlights && hasRegularFlights,
-            domestic: destination.country === airport.country
-        };
+        if (!destinationMap.has(destinationCode)) {
+            destinationMap.set(destinationCode, {
+                code: destinationCode,
+                airport: destination,
+                hasHolidays: false,
+                hasRegular: false,
+                domestic: destination.country === airport.country
+            });
+        }
+
+        const entry = destinationMap.get(destinationCode);
+        entry.hasHolidays = entry.hasHolidays || hasHolidaysFlights;
+        entry.hasRegular = entry.hasRegular || hasRegularFlights;
     });
+
+    const destinationEntries = [...destinationMap.values()].map(entry => ({
+        ...entry,
+        holidays: entry.hasHolidays && !entry.hasRegular,
+        mixed: entry.hasHolidays && entry.hasRegular
+    }));
 
     /*
        Selected airport + its direct destinations stay visible.
@@ -15904,12 +16137,7 @@ function renderRouteCalendar() {
             <button
                 type="button"
                 class="${classes}"
-                ${hasFlights && !isPast
-                    ? `onmouseenter="showRouteCalendarTooltip(this, ${scheduleCalendarYear}, ${scheduleCalendarMonth}, ${day})"
-                       onmouseleave="hideRouteCalendarTooltip()"
-                       onfocus="showRouteCalendarTooltip(this, ${scheduleCalendarYear}, ${scheduleCalendarMonth}, ${day})"
-                       onblur="hideRouteCalendarTooltip()"`
-                    : ""}
+                ${""}
                 aria-label="${day} ${scheduleMonthNames[scheduleCalendarMonth]}${hasFlights ? `: ${flights.length} flight${flights.length === 1 ? "" : "s"}` : ": no flights"}"
             >
                 <span class="route-calendar-day-number">${day}</span>
@@ -15932,6 +16160,41 @@ function renderRouteCalendar() {
     }
 
     grid.innerHTML = calendar;
+
+    /*
+       Bind the hover/focus handlers after the calendar has been rendered.
+       This keeps the daily flight tooltip working when the calendar
+       markup is rebuilt by the database-backed schedule code.
+    */
+    grid.querySelectorAll(".route-calendar-day.has-flights").forEach(dayButton => {
+        const day = Number(
+            dayButton.querySelector(".route-calendar-day-number")?.textContent
+        );
+        if (!Number.isFinite(day)) return;
+
+        dayButton.addEventListener("mouseenter", () => {
+            showRouteCalendarTooltip(
+                dayButton,
+                scheduleCalendarYear,
+                scheduleCalendarMonth,
+                day
+            );
+        });
+
+        dayButton.addEventListener("mouseleave", hideRouteCalendarTooltip);
+
+        dayButton.addEventListener("focus", () => {
+            showRouteCalendarTooltip(
+                dayButton,
+                scheduleCalendarYear,
+                scheduleCalendarMonth,
+                day
+            );
+        });
+
+        dayButton.addEventListener("blur", hideRouteCalendarTooltip);
+    });
+
     updateRouteCalendarMonthButtons();
 }
 
@@ -16339,6 +16602,175 @@ function closeScheduleModal() {
     modal.setAttribute("aria-hidden", "true");
 }
 
+
+
+/* ==========================================================
+   DATABASE-BACKED NETWORK OVERRIDES
+   ========================================================== */
+
+function getRouteRows(origin, destination) {
+    return networkScheduleMap.get(`${origin}-${destination}`) || [];
+}
+
+function getScheduleDirectionData(direction) {
+    const rows = getRouteRows(scheduleRouteFrom, scheduleRouteTo);
+    const effectiveRows = direction === "outbound"
+        ? rows
+        : getRouteRows(scheduleRouteTo, scheduleRouteFrom);
+
+    const data = {
+        Monday: [], Tuesday: [], Wednesday: [], Thursday: [],
+        Friday: [], Saturday: [], Sunday: []
+    };
+
+    effectiveRows.forEach(row => {
+        const day = scheduleWeekdayNames[Number(row.day_of_week) - 1];
+        if (!day) return;
+
+        const aircraft = row.aircraftType?.icao_code || "";
+        data[day].push({
+            times: [`${String(row.scheduled_departure).slice(0,5)} - ${String(row.scheduled_arrival).slice(0,5)}`],
+            flight: `${row.flight_number} / ${aircraft}`,
+            startWeek: row.operating_start_week,
+            endWeek: row.operating_end_week,
+            flightType: String(row.flight_type || "Regular").toLowerCase(),
+            operator: String(row.operator || "Nordica"),
+            via: row.via || ""
+        });
+    });
+
+    Object.values(data).forEach(dayFlights =>
+        dayFlights.sort((a,b) => a.times[0].localeCompare(b.times[0]))
+    );
+
+    return data;
+}
+
+function getFlightsForDate(direction, year, month, day) {
+    const date = new Date(year, month, day);
+    const data = getScheduleDirectionData(direction);
+    if (!data) return [];
+
+    const weekdayIndex = (date.getDay() + 6) % 7;
+    const weekday = scheduleWeekdayNames[weekdayIndex];
+
+    return (data[weekday] || []).filter(flight =>
+        isScheduleActiveForDate(flight, date)
+    );
+}
+
+function getRouteSchedule(route) {
+    if (!route) return null;
+    return {
+        outbound: getRouteRows(route.from, route.to),
+        inbound: getRouteRows(route.to, route.from)
+    };
+}
+
+function routeHasFlightType(route, flightType) {
+    if (!route) return false;
+    const wanted = String(flightType).toLowerCase();
+    return (route._scheduleRows || []).some(row =>
+        String(row.flight_type || "Regular").toLowerCase() === wanted
+    );
+}
+
+function routeHasHolidaysFlights(route) {
+    return !!route?._hasHolidaysFlights || routeHasFlightType(route, "holidays");
+}
+
+function routeHasRegularFlights(route) {
+    return !!route?._hasRegularFlights || routeHasFlightType(route, "regular");
+}
+
+function getRouteCategory(route) {
+    if (routeHasHolidaysFlights(route) && !routeHasRegularFlights(route)) return "holidays";
+
+    const from = airports[route.from];
+    const to = airports[route.to];
+    return from && to && from.country === to.country ? "domestic" : "international";
+}
+
+function getAirportTodaySchedule(code, dayOffset = 0) {
+    const base = getScheduleToday();
+    const date = new Date(Date.UTC(base.year, base.month, base.day + dayOffset));
+    const weekday = scheduleWeekdayNames[(date.getUTCDay() + 6) % 7];
+    const departures = [];
+    const arrivals = [];
+
+    routes.forEach(route => {
+        let rows = [];
+        let direction = null;
+
+        if (route.from === code) {
+            rows = getRouteRows(route.from, route.to);
+            direction = "outbound";
+        } else if (route.to === code) {
+            rows = getRouteRows(route.from, route.to);
+            direction = "inbound";
+        } else {
+            return;
+        }
+
+        rows.filter(row => {
+            const rowDay = scheduleWeekdayNames[Number(row.day_of_week) - 1];
+            return rowDay === weekday && isScheduleActiveForDate({
+                startWeek: row.operating_start_week,
+                endWeek: row.operating_end_week
+            }, date);
+        }).forEach(row => {
+            const aircraft = row.aircraftType?.name || row.aircraftType?.icao_code || "";
+            const dep = String(row.scheduled_departure).slice(0,5);
+            const arr = String(row.scheduled_arrival).slice(0,5);
+            const flight = {
+                originCode: route.from,
+                destinationCode: route.to,
+                flight: row.flight_number,
+                aircraft,
+                via: row.via || "",
+                operator: row.operator
+            };
+
+            if (direction === "outbound") {
+                departures.push({...flight, time: dep, endTime: arr});
+            } else {
+                arrivals.push({...flight, time: arr, startTime: dep});
+            }
+        });
+    });
+
+    const dedupe = list => {
+        const seen = new Set();
+        return list.filter(f => {
+            const key = `${f.time}|${f.endTime || f.startTime || ""}|${f.originCode}|${f.destinationCode}|${f.flight}`;
+            if (seen.has(key)) return false;
+            seen.add(key);
+            return true;
+        }).sort((a,b) => a.time.localeCompare(b.time));
+    };
+
+    return {
+        departures: dedupe(departures),
+        arrivals: dedupe(arrivals)
+    };
+}
+
+        // The network is intentionally initialized only after the Supabase
+        // schedule has loaded. This keeps the map/UI identical while making
+        // the database the source of truth for routes and timetables.
+    } catch (error) {
+        console.error("Network data could not be loaded:", error);
+        const panel = document.getElementById("panel-content");
+        if (panel) {
+            panel.innerHTML = `
+                <div class="empty-state">
+                    Network data could not be loaded.<br><br>
+                    Please try refreshing the page.
+                </div>
+            `;
+        }
+    }
+})();
 </script>
 
 <footer class="footer">
