@@ -760,7 +760,13 @@ function dayMatchesFlight(dayValue, date) {
   };
   if (value in map) return dow === map[value];
   const n = Number(value);
-  return Number.isNaN(n) ? true : dow === n;
+  if (Number.isNaN(n)) return true;
+
+  // Supabase scheduled_flights uses ISO weekday numbering:
+  // Monday = 1 ... Saturday = 6, Sunday = 7.
+  // JavaScript Date#getDay() uses Sunday = 0 ... Saturday = 6.
+  const isoDow = dow === 0 ? 7 : dow;
+  return isoDow === n;
 }
 function isoWeek(dateString) {
   const date = new Date(dateString + "T12:00:00");
@@ -1282,11 +1288,11 @@ async function loadFilingData() {
   // not query certification_aircraft_types from the browser: that mapping is
   // an internal database relationship and is not needed by the Crew Hub.
   // Technical aircraft types are mapped locally from their ICAO codes.
-  const [scheduledFlightsAll, routeRes, airportRes, typeRes, aircraftRes, certRes, certTypeRes] = await Promise.all([
-    fetchAllScheduledFlights(),
-    sb.from("routes").select("*").eq("active", true),
-    sb.from("airports").select("*"),
-    sb.from("aircraft_types").select("*").eq("active", true),
+  // Use the same public schedule-data RPC as the Network page for the
+  // schedule/airport/type data. This avoids the filing search becoming empty
+  // when direct table reads are restricted by RLS or pagination.
+  const [networkRes, aircraftRes, certRes, certTypeRes] = await Promise.all([
+    sb.rpc("get_network_data"),
     sb.from("aircraft").select("*").eq("status", "Active"),
     sb.from("pilot_certifications")
       .select("certification_type_id")
@@ -1295,18 +1301,33 @@ async function loadFilingData() {
       .select("id, name, display_name")
   ]);
 
-  const sfRes = { data: scheduledFlightsAll, error: null };
+  if (networkRes.error) {
+    console.error("Filing network data error:", networkRes.error);
+    throw networkRes.error;
+  }
 
-  const failed = [sfRes, routeRes, airportRes, typeRes, aircraftRes, certRes, certTypeRes].find(r => r.error);
+  const failed = [aircraftRes, certRes, certTypeRes].find(r => r.error);
   if (failed) {
     console.error("Filing data error:", failed.error);
     throw failed.error;
   }
 
-  scheduledFlightsCache = sfRes.data || [];
-  routesCache = routeRes.data || [];
-  airportsCache = airportRes.data || [];
-  aircraftTypesCache = typeRes.data || [];
+  const networkData =
+    typeof networkRes.data === "string"
+      ? JSON.parse(networkRes.data)
+      : (networkRes.data || {});
+  scheduledFlightsCache = Array.isArray(networkData.scheduled_flights)
+    ? networkData.scheduled_flights
+    : [];
+  routesCache = Array.isArray(networkData.routes)
+    ? networkData.routes
+    : [];
+  airportsCache = Array.isArray(networkData.airports)
+    ? networkData.airports
+    : [];
+  aircraftTypesCache = Array.isArray(networkData.aircraft_types)
+    ? networkData.aircraft_types
+    : [];
   aircraftCache = aircraftRes.data || [];
 
   const certTypeNames = new Map(
