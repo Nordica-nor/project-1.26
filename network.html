@@ -4006,16 +4006,31 @@ function renderAirportScheduleTab(code, tab) {
     const todaySchedule = getAirportTodaySchedule(code, 0);
     const tomorrowSchedule = getAirportTodaySchedule(code, 1);
 
-    const todayFlights = todaySchedule[tab] || [];
+    const allTodayFlights = todaySchedule[tab] || [];
     const tomorrowFlights = tomorrowSchedule[tab] || [];
 
-    const todayTitle = tab === "departures"
-        ? "Departures today"
-        : "Arrivals today";
+    const now = new Date();
 
-    const tomorrowTitle = tab === "departures"
-        ? "Departures tomorrow"
-        : "Arrivals tomorrow";
+    const getMinutes = (time) => {
+        const parts = String(time || "").split(":");
+        if (parts.length !== 2) return 0;
+
+        return Number(parts[0]) * 60 + Number(parts[1]);
+    };
+
+    const nowMinutes =
+        now.getHours() * 60 +
+        now.getMinutes();
+
+    const pastTodayFlights = allTodayFlights.filter(
+        flight => getMinutes(flight.time) < nowMinutes
+    );
+
+    const futureTodayFlights = allTodayFlights.filter(
+        flight => getMinutes(flight.time) >= nowMinutes
+    );
+
+    let showPastFlights = false;
 
     const formatBoardDate = (dayOffset) => {
         const base = getScheduleToday();
@@ -4032,6 +4047,17 @@ function renderAirportScheduleTab(code, tab) {
             timeZone: "UTC"
         });
     };
+
+    function getFlightKey(flight) {
+        return [
+            flight.flight,
+            flight.time,
+            flight.startTime || "",
+            flight.endTime || "",
+            flight.originCode || "",
+            flight.destinationCode || ""
+        ].join("|");
+    }
 
     function renderFlightList(flights) {
         if (!flights.length) {
@@ -4054,7 +4080,10 @@ function renderAirportScheduleTab(code, tab) {
                     : "";
 
             html += `
-                <div class="airport-schedule-flight">
+                <div
+                    class="airport-schedule-flight"
+                    data-flight-key="${getFlightKey(flight).replace(/"/g, "&quot;")}"
+                >
                     <div>
                         <div class="airport-schedule-route">${routeText}</div>
                         <div class="airport-schedule-meta">
@@ -4081,24 +4110,114 @@ function renderAirportScheduleTab(code, tab) {
         return html;
     }
 
-    let panelHTML = `
-        <h2 class="airport-schedule-title">${todayTitle}</h2>
-        <div class="airport-schedule-date">${formatBoardDate(0)}</div>
-        ${renderFlightList(todayFlights)}
+    function captureScrollAnchor() {
+        const rect = content.getBoundingClientRect();
+        const flights = content.querySelectorAll(".airport-schedule-flight");
 
-        <div class="airport-schedule-day-divider"></div>
+        for (const flight of flights) {
+            const flightRect = flight.getBoundingClientRect();
 
-        <h2 class="airport-schedule-title airport-schedule-tomorrow-title">
-            ${tomorrowTitle}
-        </h2>
-        <div class="airport-schedule-date">${formatBoardDate(1)}</div>
-        ${renderFlightList(tomorrowFlights)}
-    `;
+            if (
+                flightRect.bottom > rect.top &&
+                flightRect.top < rect.bottom
+            ) {
+                return {
+                    key: flight.dataset.flightKey,
+                    offset: flightRect.top - rect.top
+                };
+            }
+        }
 
-    content.innerHTML = panelHTML;
+        return null;
+    }
 
-    content.scrollTop = 0;
+    function restoreScrollAnchor(anchor) {
+        if (!anchor) return;
+
+        const target = content.querySelector(
+            `.airport-schedule-flight[data-flight-key="${CSS.escape(anchor.key)}"]`
+        );
+
+        if (!target) return;
+
+        const contentRect = content.getBoundingClientRect();
+        const targetRect = target.getBoundingClientRect();
+
+        content.scrollTop +=
+            targetRect.top -
+            contentRect.top -
+            anchor.offset;
+    }
+
+    function renderBoard(anchor = null) {
+        let panelHTML = "";
+
+        if (pastTodayFlights.length) {
+            panelHTML += `
+                <button
+                    type="button"
+                    class="airport-schedule-past-toggle"
+                    id="airport-past-toggle"
+                    onmousedown="event.preventDefault()"
+                >${showPastFlights ? "Hide departed flights" : "Show departed flights"}</button>
+            `;
+        }
+
+        panelHTML += `
+            <div class="airport-schedule-date airport-schedule-main-date">
+                ${formatBoardDate(0)}
+            </div>
+        `;
+
+        if (showPastFlights) {
+            panelHTML += renderFlightList(pastTodayFlights);
+        }
+
+        panelHTML += renderFlightList(futureTodayFlights);
+
+        panelHTML += `
+            <div class="airport-schedule-day-divider"></div>
+
+            <div class="airport-schedule-date airport-schedule-main-date">
+                ${formatBoardDate(1)}
+            </div>
+            ${renderFlightList(tomorrowFlights)}
+        `;
+
+        content.innerHTML = panelHTML;
+
+        const toggle = document.getElementById("airport-past-toggle");
+
+        if (toggle) {
+            toggle.addEventListener("click", (event) => {
+                event.preventDefault();
+
+                const anchorBefore = captureScrollAnchor();
+
+                showPastFlights = !showPastFlights;
+
+                renderBoard(anchorBefore);
+
+                requestAnimationFrame(() => {
+                    restoreScrollAnchor(anchorBefore);
+
+                    requestAnimationFrame(() => {
+                        restoreScrollAnchor(anchorBefore);
+                    });
+                });
+            });
+        }
+
+        if (!anchor) {
+            content.scrollTop = 0;
+        } else {
+            restoreScrollAnchor(anchor);
+        }
+    }
+
+    renderBoard();
 }
+
 
 function setAirportTab(tab) {
     if (!selectedAirportCode) return;
@@ -16172,73 +16291,30 @@ function renderRouteCalendar() {
         );
         if (!Number.isFinite(day)) return;
 
-        const today = getScheduleToday();
-        const isPast =
-            scheduleCalendarYear < today.year ||
-            (scheduleCalendarYear === today.year &&
-             scheduleCalendarMonth === today.month &&
-             day < today.day);
-
-        if (!isPast) {
-            dayButton.addEventListener("mouseenter", () => {
-                showRouteCalendarTooltip(
-                    dayButton,
-                    scheduleCalendarYear,
-                    scheduleCalendarMonth,
-                    day
-                );
-            });
-
-            dayButton.addEventListener("focus", () => {
-                showRouteCalendarTooltip(
-                    dayButton,
-                    scheduleCalendarYear,
-                    scheduleCalendarMonth,
-                    day
-                );
-            });
-        }
+        dayButton.addEventListener("mouseenter", () => {
+            showRouteCalendarTooltip(
+                dayButton,
+                scheduleCalendarYear,
+                scheduleCalendarMonth,
+                day
+            );
+        });
 
         dayButton.addEventListener("mouseleave", hideRouteCalendarTooltip);
+
+        dayButton.addEventListener("focus", () => {
+            showRouteCalendarTooltip(
+                dayButton,
+                scheduleCalendarYear,
+                scheduleCalendarMonth,
+                day
+            );
+        });
+
         dayButton.addEventListener("blur", hideRouteCalendarTooltip);
     });
 
     updateRouteCalendarMonthButtons();
-}
-
-function getRouteCalendarNavigationMonths() {
-    const today = getScheduleToday();
-    const months = [];
-
-    // Allow the current month plus the next 12 months.
-    // For seasonal routes, only keep months that actually contain
-    // at least one scheduled flight on this route.
-    for (let offset = 0; offset <= 12; offset++) {
-        const date = new Date(today.year, today.month + offset, 1);
-        const year = date.getFullYear();
-        const month = date.getMonth();
-
-        if (isSeasonalWinterRoute()) {
-            const daysInMonth = new Date(year, month + 1, 0).getDate();
-            let monthHasFlights = false;
-
-            for (let day = 1; day <= daysInMonth; day++) {
-                if (
-                    getFlightsForDate("outbound", year, month, day).length > 0 ||
-                    getFlightsForDate("inbound", year, month, day).length > 0
-                ) {
-                    monthHasFlights = true;
-                    break;
-                }
-            }
-
-            if (!monthHasFlights) continue;
-        }
-
-        months.push({ year, month });
-    }
-
-    return months;
 }
 
 function updateRouteCalendarMonthButtons() {
@@ -16247,46 +16323,67 @@ function updateRouteCalendarMonthButtons() {
 
     if (!prev || !next) return;
 
-    const months = getRouteCalendarNavigationMonths();
-    const idx = months.findIndex(m =>
-        m.year === scheduleCalendarYear && m.month === scheduleCalendarMonth
-    );
+    if (isSeasonalWinterRoute()) {
+        const months = getSeasonalWinterCalendarMonths();
+        const idx = months.findIndex(m =>
+            m.year === scheduleCalendarYear && m.month === scheduleCalendarMonth
+        );
 
-    prev.classList.toggle("hidden", idx <= 0);
-    next.classList.toggle(
-        "hidden",
-        idx < 0 || idx >= months.length - 1
-    );
+        prev.classList.toggle("hidden", idx <= 0);
+        next.classList.toggle("hidden", idx < 0 || idx >= months.length - 1);
+        return;
+    }
+
+    const currentIndex =
+        getScheduleMonthIndex(scheduleCalendarYear, scheduleCalendarMonth);
+    const minIndex = 0;
+    const max = getScheduleMaxDate();
+    const maxIndex = getScheduleMonthIndex(max.year, max.month);
+
+    prev.classList.toggle("hidden", currentIndex <= minIndex);
+    next.classList.toggle("hidden", currentIndex >= maxIndex);
 }
 
 function changeRouteCalendarMonth(delta) {
     hideRouteCalendarTooltip();
 
-    const months = getRouteCalendarNavigationMonths();
+    if (isSeasonalWinterRoute()) {
+        const months = getSeasonalWinterCalendarMonths();
+        let idx = months.findIndex(m =>
+            m.year === scheduleCalendarYear && m.month === scheduleCalendarMonth
+        );
 
-    let idx = months.findIndex(m =>
-        m.year === scheduleCalendarYear && m.month === scheduleCalendarMonth
-    );
+        if (idx < 0) idx = 0;
 
-    if (idx < 0) {
-        idx = 0;
+        const nextIndex = idx + delta;
+        if (nextIndex < 0 || nextIndex >= months.length) return;
+
+        scheduleCalendarYear = months[nextIndex].year;
+        scheduleCalendarMonth = months[nextIndex].month;
+    } else {
+        let month = scheduleCalendarMonth + delta;
+        let year = scheduleCalendarYear;
+
+        if (month < 0) {
+            month = 11;
+            year--;
+        } else if (month > 11) {
+            month = 0;
+            year++;
+        }
+
+        const newIndex = getScheduleMonthIndex(year, month);
+        const max = getScheduleMaxDate();
+        const maxIndex = getScheduleMonthIndex(max.year, max.month);
+
+        if (newIndex < 0 || newIndex > maxIndex) return;
+
+        scheduleCalendarYear = year;
+        scheduleCalendarMonth = month;
     }
-
-    const nextIndex = idx + delta;
-
-    if (nextIndex < 0 || nextIndex >= months.length) {
-        return;
-    }
-
-    scheduleCalendarYear = months[nextIndex].year;
-    scheduleCalendarMonth = months[nextIndex].month;
 
     renderRouteCalendar();
 }
-
-// The route calendar is rendered dynamically with inline arrow handlers.
-// Expose the local function on window so those handlers can call it.
-window.changeRouteCalendarMonth = changeRouteCalendarMonth;
 
 function renderScheduleDirection(direction) {
     const view = document.getElementById(
@@ -16816,6 +16913,29 @@ function getAirportTodaySchedule(code, dayOffset = 0) {
     font-weight: 400;
     line-height: 1.3;
     text-align: left;
+}
+
+.airport-schedule-main-date {
+    margin-top: 0;
+}
+
+.airport-schedule-past-toggle {
+    display: block;
+    width: 100%;
+    margin: 10px 0 12px;
+    padding: 9px 12px;
+    border: 1px solid rgba(255,255,255,.14);
+    border-radius: 7px;
+    background: #263e65;
+    color: #fff;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.airport-schedule-past-toggle:hover {
+    background: #4671b8;
 }
 
 </style>
