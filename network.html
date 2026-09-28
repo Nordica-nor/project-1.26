@@ -16266,6 +16266,9 @@ function changeRouteCalendarMonth(delta) {
     renderRouteCalendar();
 }
 
+
+// Make calendar month navigation available to the inline arrow buttons.
+window.changeRouteCalendarMonth = changeRouteCalendarMonth;
 function renderScheduleDirection(direction) {
     const view = document.getElementById(
         direction === "outbound" ? "schedule-view-outbound" : "schedule-view-inbound"
