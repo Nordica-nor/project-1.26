@@ -3276,11 +3276,11 @@ routes.forEach(route => {
         if (boo) {
             const segmentA = L.polyline(
                 greatCirclePoints(from, boo),
-                { color: "#4671b8", weight: 2, opacity: 0.72, smoothFactor: 1 }
+                { color: "#4671b8", weight: 0, opacity: 0, smoothFactor: 1 }
             ).addTo(map);
             const segmentB = L.polyline(
                 greatCirclePoints(boo, to),
-                { color: "#4671b8", weight: 2, opacity: 0.72, smoothFactor: 1 }
+                { color: "#4671b8", weight: 0, opacity: 0, smoothFactor: 1 }
             ).addTo(map);
 
             segmentA.routeData = route;
@@ -3294,8 +3294,8 @@ routes.forEach(route => {
         greatCirclePoints(from, to),
         {
             color: "#4671b8",
-            weight: 2,
-            opacity: 0.72,
+            weight: 0,
+            opacity: 0,
             smoothFactor: 1
         }
     ).addTo(map);
@@ -4662,16 +4662,18 @@ function applyNetworkFilters() {
 
             line.setStyle({
                 color: getDisplayedRouteColor(route),
-                weight: connected ? 2.5 : 1,
-                opacity: connected ? 1 : 0.08
+                weight: connected ? 2.5 : 0,
+                opacity: connected ? 1 : 0
             });
 
         } else {
 
+            // No airport is selected: hide all route lines.
+            // The network view should show airport dots only.
             line.setStyle({
                 color: getDisplayedRouteColor(route),
-                weight: 1.5,
-                opacity: 0.45
+                weight: 0,
+                opacity: 0
             });
         }
     });
@@ -4743,12 +4745,12 @@ function resetMap() {
         el.classList.remove("fade-out");
     });
 
+    // No airport is selected after reset: keep all route lines hidden.
     routeLayers.forEach(line => {
         line.setStyle({
-            color: getComputedStyle(document.documentElement)
-                .getPropertyValue("--route").trim(),
-            weight: 1.5,
-            opacity: 0.45
+            color: getDisplayedRouteColor(line.routeData),
+            weight: 0,
+            opacity: 0
         });
     });
 
@@ -4792,6 +4794,9 @@ function fitNetwork() {
 }
 
 fitNetwork();
+
+// Start with airport dots only. No route lines are visible until an airport is selected.
+applyNetworkFilters();
 
 window.resetMap = resetMap;
 
