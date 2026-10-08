@@ -3693,12 +3693,9 @@ function getRouteOperatingMonthRange() {
         [destination.lat, destination.lng]
     );
 
-    map.fitBounds(bounds, {
-        padding: [120, 120],
-        maxZoom: 6,
-        animate: true,
-        duration: 0.5
-    });
+    // Do not move or zoom the map when a route is selected.
+    // The user controls the map viewport manually.
+
 }
 
 
@@ -4387,13 +4384,9 @@ function renderAirportDestinations(code) {
 
     applyNetworkFilters();
 
-    map.panTo(
-        [airport.lat, airport.lng],
-        {
-            animate: true,
-            duration: 0.5
-        }
-    );
+    // Do not move the map when an airport is selected.
+    // The user controls the map viewport manually.
+
 }
 
 
@@ -4438,15 +4431,31 @@ function getRouteSchedule(route) {
 }
 
 function routeHasFlightType(route, flightType) {
-    const schedule = getRouteSchedule(route);
-    if (!schedule) return false;
+    if (!route) return false;
 
-    return ["outbound", "inbound"].some(direction =>
-        Object.values(schedule[direction] || {}).some(dayFlights =>
-            Array.isArray(dayFlights) &&
-            dayFlights.some(flight => flight && flight.flightType === flightType)
-        )
-    );
+    /*
+       A route can have schedule data stored under either direction
+       (FROM-TO or TO-FROM). Check both instead of stopping at the first
+       matching schedule. This is important for mixed routes such as OSL-LPA:
+       the route must pass the Nordica filter if even one flight is regular,
+       and pass the Holidays filter if even one flight is a Holidays flight.
+    */
+    const scheduleKeys = [
+        `${route.from}-${route.to}`,
+        `${route.to}-${route.from}`
+    ];
+
+    return scheduleKeys.some(key => {
+        const schedule = additionalSchedules?.[key];
+        if (!schedule) return false;
+
+        return ["outbound", "inbound"].some(direction =>
+            Object.values(schedule[direction] || {}).some(dayFlights =>
+                Array.isArray(dayFlights) &&
+                dayFlights.some(flight => flight && flight.flightType === flightType)
+            )
+        );
+    });
 }
 
 function routeHasHolidaysFlights(route) {
@@ -4454,10 +4463,43 @@ function routeHasHolidaysFlights(route) {
 }
 
 function routeHasNordicaFlights(route) {
-    return routeHasFlightType(route, "regular") || (
-        !routeHasHolidaysFlights(route) &&
-        !!getRouteSchedule(route)
-    );
+    if (!route) return false;
+
+    /*
+       Nordica is the default operator for legacy schedule entries.
+       Therefore a flight without an explicit flightType is a Nordica flight.
+       Only flights explicitly marked as "holidays" belong exclusively to
+       Holidays. This is important for mixed routes such as OSL-LPA, where
+       the Nordica flights have no flightType while the Holidays flights do.
+    */
+    const scheduleKeys = [
+        `${route.from}-${route.to}`,
+        `${route.to}-${route.from}`
+    ];
+
+    let foundSchedule = false;
+
+    for (const key of scheduleKeys) {
+        const schedule = additionalSchedules?.[key];
+        if (!schedule) continue;
+
+        foundSchedule = true;
+
+        const hasNordicaFlight = ["outbound", "inbound"].some(direction =>
+            Object.values(schedule[direction] || {}).some(dayFlights =>
+                Array.isArray(dayFlights) &&
+                dayFlights.some(flight =>
+                    flight && flight.flightType !== "holidays"
+                )
+            )
+        );
+
+        if (hasNordicaFlight) return true;
+    }
+
+    // If there is no detailed schedule, retain the legacy route metadata
+    // behavior: a route is Nordica unless it is explicitly Holidays-only.
+    return !foundSchedule && route.holidays !== true;
 }
 
 function routePassesFilters(route) {
