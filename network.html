@@ -16606,8 +16606,9 @@ function closeScheduleModal() {
 // Live schedule loader: routes and timetable are read from Supabase, not the legacy arrays above.
 (async function loadNordicaScheduleFromSupabase() {
   const SUPABASE_URL = "https://jvmuvjnfhzejjlkznhra.supabase.co";
-  const SUPABASE_ANON_KEY = "sb_publishable_kOn3YWfaMYJOjCoPCLHv1Q_CLup8Waw";
-  const headers = { apikey: SUPABASE_ANON_KEY };
+  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp2bXV2am5maHJhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkwODk1NDQsImV4cCI6MjEwNDY2NTU0NH0.GNCwdUPQePiEDyDSFGtWIYKeyQ7-PziJMKYXRFqGfDE";
+  // Use the legacy anon JWT in both headers; Authorization must be a JWT, not an sb_publishable key.
+  const headers = { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` };
 
   // PostgREST normally caps a response at 1,000 rows. Page explicitly so every
   // active scheduled flight is loaded, not just the first 1,000.
