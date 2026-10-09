@@ -16606,7 +16606,7 @@ function closeScheduleModal() {
 // Live schedule loader: routes and timetable are read from Supabase, not the legacy arrays above.
 (async function loadNordicaScheduleFromSupabase() {
   const SUPABASE_URL = "https://jvmuvjnfhzejjlkznhra.supabase.co";
-  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJvbGUiOiJhbm9uIiwiaWF0IjoxNzg5MDg5NTQ0LCJleHAiOjIxMDQ2NjU1NTR9.GNCwdUPQePiEDyDSFGtWIYKeyQ7-PziJMKYXRFqGfDE";
+  const SUPABASE_ANON_KEY = "sb_publishable_kOn3YWfaMYJOjCoPCLHv1Q_CLup8Waw";
   const headers = { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` };
 
   // PostgREST normally caps a response at 1,000 rows. Page explicitly so every
