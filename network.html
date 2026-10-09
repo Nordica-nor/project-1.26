@@ -3452,14 +3452,6 @@ function selectRoute(originCode, destinationCode) {
     const roleEl = document.getElementById("airport-role");
     if (roleEl) roleEl.innerHTML = "";
 
-    const nordicAirlinkRoutes = new Set([
-        ["TOS","ALF"], ["TOS","KKN"], ["TOS","BOO"], ["TOS","TRD"],
-        ["TRD","BOO"], ["BGO","TRD"], ["BGO","SVG"], ["BGO","AES"], ["BGO","TRF"], ["BGO","TOS"], ["SVG","TRD"], ["TOS","ANX"]
-    ].map(([from, to]) => [from, to].sort().join("-")));
-
-    const routePair = [originCode, destinationCode].sort().join("-");
-    const isNordicAirlink = nordicAirlinkRoutes.has(routePair);
-
     const outboundSchedule = getScheduleDirectionData("outbound");
     const inboundSchedule = getScheduleDirectionData("inbound");
 
@@ -3697,13 +3689,15 @@ function getAirportTodaySchedule(code, dayOffset = 0) {
         };
         const parseDbTime = value => {
             if (value == null) return "";
-            const match = String(value).match(/(\\d{1,2}:\\d{2})/);
+            const match = String(value).match(/(\d{1,2}:\d{2})/);
             return match ? match[1] : "";
         };
         window.supabaseScheduleRows.forEach(flight => {
             if (!isDbFlightActive(flight)) return;
             const dayValue = normalizeDay(flight.day_of_week);
-            const aliases = dayAliases[weekday] || [];
+            // scheduleWeekdayNames uses title case (e.g. "Friday"), while
+            // dayAliases is keyed in lowercase.
+            const aliases = dayAliases[String(weekday).toLowerCase()] || [];
             // Supabase stores day_of_week as an integer using ISO numbering:
             // Monday=1 through Sunday=7. Also accept textual values for older rows.
             const isoDayOfWeek = date.getUTCDay() === 0 ? 7 : date.getUTCDay();
@@ -4037,11 +4031,6 @@ function renderAirportScheduleTab(code, tab) {
                 : nordicaLogoDataUri;
             const airlineName = isHolidaysFlight ? "Holidays" : "Nordica";
 
-            const operator =
-                isNordicAirlinkRoute(flight.originCode, flight.destinationCode)
-                    ? `<div class="airport-schedule-meta">Nordic Airlink</div>`
-                    : "";
-
             html += `
                 <div class="airport-schedule-flight">
                     <div class="airport-schedule-main">
@@ -4052,7 +4041,6 @@ function renderAirportScheduleTab(code, tab) {
                                 <span class="airport-schedule-number">Flight ${flight.flight}</span>
                                 · ${flight.aircraft}
                             </div>
-                            ${operator}
                         </div>
                     </div>
                     <div>
@@ -16482,26 +16470,6 @@ function changeScheduleMonth(delta) {
     renderBothScheduleCalendars();
 }
 
-function isNordicAirlinkRoute(fromCode, toCode) {
-    const key = fromCode + "-" + toCode;
-    const reverseKey = toCode + "-" + fromCode;
-    const nordicAirlinkRoutes = [
-        "TOS-ALF",
-        "TOS-KKN",
-        "TOS-BOO",
-        "TOS-TRD",
-        "TRD-BOO",
-        "BGO-TRD",
-        "BGO-SVG",
-        "BGO-AES",
-        "BGO-TRF",
-        "BGO-TOS",
-        "SVG-TRD",
-        "TOS-ANX"
-    ];
-    return nordicAirlinkRoutes.includes(key) || nordicAirlinkRoutes.includes(reverseKey);
-}
-
 function openScheduleDay(direction, year, month, day) {
     const flights = getFlightsForDate(direction, year, month, day);
     const modal = document.getElementById("schedule-day-modal");
@@ -16549,11 +16517,6 @@ function openScheduleDay(direction, year, month, day) {
                     <div class="daily-flight-type${isHolidaysScheduleFlight(flight) ? " holidays" : ""}">
                         ${isHolidaysScheduleFlight(flight) ? "Holidays flight" : "Regular flight"}
                     </div>
-                    ${
-                        isNordicAirlinkRoute(scheduleRouteFrom, scheduleRouteTo)
-                        ? `<div class="daily-flight-operator">Nordic Airlink</div>`
-                        : ""
-                    }
                   </div>
                 </div>
               </div>
