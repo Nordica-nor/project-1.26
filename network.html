@@ -3701,7 +3701,7 @@ function getAirportTodaySchedule(code, dayOffset = 0) {
             // Supabase stores day_of_week as an integer using ISO numbering:
             // Monday=1 through Sunday=7. Also accept textual values for older rows.
             const isoDayOfWeek = date.getUTCDay() === 0 ? 7 : date.getUTCDay();
-            const dayMatches = /^\\d+$/.test(dayValue)
+            const dayMatches = /^\d+$/.test(dayValue)
                 ? Number(dayValue) === isoDayOfWeek
                 : aliases.includes(dayValue);
             if (!dayMatches) return;
@@ -3722,13 +3722,13 @@ function getAirportTodaySchedule(code, dayOffset = 0) {
             if (originCode === code) {
                 dbDepartures.push({
                     time: departureTime, endTime: arrivalTime, originCode, destinationCode,
-                    flight: details.number, aircraft: details.aircraft, via: flight.via || ""
+                    flight: details.number, aircraft: details.aircraft, flightType: String(flight.flight_type || "nordica").toLowerCase().includes("holidays") ? "holidays" : "nordica", via: flight.via || ""
                 });
             }
             if (destinationCode === code) {
                 dbArrivals.push({
                     time: arrivalTime, startTime: departureTime, originCode, destinationCode,
-                    flight: details.number, aircraft: details.aircraft, via: flight.via || ""
+                    flight: details.number, aircraft: details.aircraft, flightType: String(flight.flight_type || "nordica").toLowerCase().includes("holidays") ? "holidays" : "nordica", via: flight.via || ""
                 });
             }
         });
