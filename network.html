@@ -16607,7 +16607,7 @@ function closeScheduleModal() {
 (async function loadNordicaScheduleFromSupabase() {
   const SUPABASE_URL = "https://jvmuvjnfhzejjlkznhra.supabase.co";
   const SUPABASE_ANON_KEY = "sb_publishable_kOn3YWfaMYJOjCoPCLHv1Q_CLup8Waw";
-  const headers = { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` };
+  const headers = { apikey: SUPABASE_ANON_KEY };
 
   // PostgREST normally caps a response at 1,000 rows. Page explicitly so every
   // active scheduled flight is loaded, not just the first 1,000.
