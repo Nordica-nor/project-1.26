@@ -16616,7 +16616,20 @@ function closeScheduleModal() {
     const routeById = Object.fromEntries(routeRows.map(r => [r.id, r]));
     window.supabaseScheduleRows = flightRows.map(f => {
       const r = routeById[f.route_id] || {};
-      return {...f, origin: airportCodeById[r.origin_airport_id], destination: airportCodeById[r.destination_airport_id]};
+      // Some schedules leave flight_type blank on the individual flight row.
+      // In that case inherit the route's classification so Holidays flights
+      // are not incorrectly rendered with the regular/Nordica blue dot.
+      const routeType = String(r.flight_type || "").trim();
+      const flightType = String(f.flight_type || "").trim();
+      const operatorText = String(f.operator || r.operator || "").toLowerCase();
+      const resolvedFlightType = flightType || routeType ||
+        (operatorText.includes("holidays") ? "holidays" : null);
+      return {
+        ...f,
+        flight_type: resolvedFlightType,
+        origin: airportCodeById[r.origin_airport_id],
+        destination: airportCodeById[r.destination_airport_id]
+      };
     }).filter(f => f.origin && f.destination);
 
     const unique = new Map();
