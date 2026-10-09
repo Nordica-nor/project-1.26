@@ -3668,6 +3668,88 @@ function getAirportTodaySchedule(code, dayOffset = 0) {
     const date = new Date(Date.UTC(today.year, today.month, today.day + dayOffset));
     const weekday = scheduleWeekdayNames[(date.getUTCDay() + 6) % 7];
 
+    // Prefer Supabase for airport boards, using the same live schedule rows
+    // as the route calendar. Fall back to the legacy schedules only if the
+    // database schedule has not loaded.
+    if (Array.isArray(window.supabaseScheduleRows) && window.supabaseScheduleRows.length) {
+        const dbDepartures = [];
+        const dbArrivals = [];
+        const normalizeDay = value => String(value || "").trim().toLowerCase();
+        const dayAliases = {
+            monday: ["monday", "mon", "1"],
+            tuesday: ["tuesday", "tue", "tues", "2"],
+            wednesday: ["wednesday", "wed", "3"],
+            thursday: ["thursday", "thu", "thur", "thurs", "4"],
+            friday: ["friday", "fri", "5"],
+            saturday: ["saturday", "sat", "6"],
+            sunday: ["sunday", "sun", "0", "7"]
+        };
+        const isDbFlightActive = flight => {
+            if (flight.active === false) return false;
+            if (flight.operating_start_week == null && flight.operating_end_week == null) return true;
+            const weekDate = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
+            weekDate.setUTCDate(weekDate.getUTCDate() + 4 - (weekDate.getUTCDay() || 7));
+            const weekYearStart = new Date(Date.UTC(weekDate.getUTCFullYear(), 0, 1));
+            const week = Math.ceil((((weekDate - weekYearStart) / 86400000) + 1) / 7);
+            const start = flight.operating_start_week == null ? 1 : Number(flight.operating_start_week);
+            const end = flight.operating_end_week == null ? 53 : Number(flight.operating_end_week);
+            return start <= end ? week >= start && week <= end : week >= start || week <= end;
+        };
+        const parseDbTime = value => {
+            if (value == null) return "";
+            const match = String(value).match(/(\\d{1,2}:\\d{2})/);
+            return match ? match[1] : "";
+        };
+        window.supabaseScheduleRows.forEach(flight => {
+            if (!isDbFlightActive(flight)) return;
+            const dayValue = normalizeDay(flight.day_of_week);
+            const aliases = dayAliases[weekday] || [];
+            // Supabase stores day_of_week as an integer using ISO numbering:
+            // Monday=1 through Sunday=7. Also accept textual values for older rows.
+            const isoDayOfWeek = date.getUTCDay() === 0 ? 7 : date.getUTCDay();
+            const dayMatches = /^\\d+$/.test(dayValue)
+                ? Number(dayValue) === isoDayOfWeek
+                : aliases.includes(dayValue);
+            if (!dayMatches) return;
+            const originCode = flight.origin;
+            const destinationCode = flight.destination;
+            if (!originCode || !destinationCode) return;
+            // Preserve the existing rule that TOS–TRD is a through-service,
+            // not a direct flight on either airport board.
+            if ((originCode === "TOS" && destinationCode === "TRD") ||
+                (originCode === "TRD" && destinationCode === "TOS")) return;
+
+            const departureTime = parseDbTime(flight.scheduled_departure);
+            const arrivalTime = parseDbTime(flight.scheduled_arrival);
+            const details = {
+                number: flight.flight_number || "",
+                aircraft: window.supabaseAircraftNames?.[flight.aircraft_type_id] || flight.aircraft_type || ""
+            };
+            if (originCode === code) {
+                dbDepartures.push({
+                    time: departureTime, endTime: arrivalTime, originCode, destinationCode,
+                    flight: details.number, aircraft: details.aircraft, via: flight.via || ""
+                });
+            }
+            if (destinationCode === code) {
+                dbArrivals.push({
+                    time: arrivalTime, startTime: departureTime, originCode, destinationCode,
+                    flight: details.number, aircraft: details.aircraft, via: flight.via || ""
+                });
+            }
+        });
+        const dedupeDb = flights => {
+            const seen = new Set();
+            return flights.filter(f => {
+                const key = [f.time, f.startTime, f.endTime, f.originCode, f.destinationCode, f.flight].join("|");
+                if (seen.has(key)) return false;
+                seen.add(key);
+                return true;
+            }).sort((a, b) => a.time.localeCompare(b.time));
+        };
+        return { departures: dedupeDb(dbDepartures), arrivals: dedupeDb(dbArrivals) };
+    }
+
     const departures = [];
     const arrivals = [];
 
