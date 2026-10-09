@@ -3580,7 +3580,7 @@ function selectRoute(originCode, destinationCode) {
     const isMixedFlightTypeRoute = hasHolidaysFlights && hasRegularFlights;
 
     if (currentRoute?.holidays && !isMixedFlightTypeRoute) {
-        routeComments.push(`<span class="holidays-operator">Operated by <img src="${holidaysLogoDataUri}" alt="Holidays"></span>`);
+        routeComments.push(`<span class="holidays-operator"><img src="${holidaysLogoDataUri}" alt="Holidays"></span>`);
     }
 
     const startsMonth = currentRoute?.startsMonth || "April";
