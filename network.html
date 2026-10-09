@@ -2335,7 +2335,6 @@ rgba(255,255,255,.10);
 <div id="network-filters" aria-label="Route filters">
     <div class="filter-title">Route filters:</div>
     <button type="button" class="filter-button" data-filter="holidays">Holidays</button>
-    <button type="button" class="filter-button" data-filter="nordica">Nordica</button>
 </div>
 
 
@@ -3485,7 +3484,7 @@ function selectRoute(originCode, destinationCode) {
     const isMixedFlightTypeRoute = hasHolidaysFlights && hasRegularFlights;
 
     if (currentRoute?.holidays && !isMixedFlightTypeRoute) {
-        routeComments.push(`<span class="holidays-operator">Operated by <img src="${holidaysLogoDataUri}" alt="Holidays"></span>`);
+        routeComments.push(`<span class="holidays-operator"><img src="${holidaysLogoDataUri}" alt="Holidays"></span>`);
     }
 
     const startsMonth = currentRoute?.startsMonth || "April";
@@ -15588,7 +15587,7 @@ function getScheduleDirectionData(direction) {
                 flight: `${row.flight_number}${aircraft ? " / " + aircraft : ""}`,
                 startWeek: row.operating_start_week,
                 endWeek: row.operating_end_week,
-                flightType: String(row.flight_type || "Nordica").toLowerCase() === "holidays" ? "holidays" : "nordica",
+                flightType: String(row.flight_type || "nordica").toLowerCase().includes("holidays") ? "holidays" : "nordica",
                 via: row.via || null
             });
         });
@@ -16616,14 +16615,13 @@ function closeScheduleModal() {
     const routeById = Object.fromEntries(routeRows.map(r => [r.id, r]));
     window.supabaseScheduleRows = flightRows.map(f => {
       const r = routeById[f.route_id] || {};
-      // Some schedules leave flight_type blank on the individual flight row.
-      // In that case inherit the route's classification so Holidays flights
-      // are not incorrectly rendered with the regular/Nordica blue dot.
-      const routeType = String(r.flight_type || "").trim();
-      const flightType = String(f.flight_type || "").trim();
-      const operatorText = String(f.operator || r.operator || "").toLowerCase();
-      const resolvedFlightType = flightType || routeType ||
-        (operatorText.includes("holidays") ? "holidays" : null);
+      // The routes table's flight_type is the authoritative source for
+      // calendar dot colour. Do not let a blank or conflicting scheduled_flights
+      // value override the route classification.
+      const routeType = String(r.flight_type || "").trim().toLowerCase();
+      const flightType = String(f.flight_type || "").trim().toLowerCase();
+      const authoritativeType = routeType || flightType;
+      const resolvedFlightType = authoritativeType.includes("holidays") ? "holidays" : "nordica";
       return {
         ...f,
         flight_type: resolvedFlightType,
