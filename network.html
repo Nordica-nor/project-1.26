@@ -16636,9 +16636,9 @@ function closeScheduleModal() {
       fetchAllRows('/rest/v1/routes?select=id,origin_airport_id,destination_airport_id,flight_type,active,airline_id&active=eq.true&order=id'),
       fetchAllRows('/rest/v1/scheduled_flights?select=id,route_id,flight_number,aircraft_type_id,operator,flight_type,day_of_week,scheduled_departure,scheduled_arrival,operating_start_week,operating_end_week,active,via,airline_id&active=eq.true&order=id'),
       fetchAllRows('/rest/v1/aircraft_types?select=id,icao_code,name&order=id'),
-      fetchAllRows('/rest/v1/airports?select=id,iata_code,icao_code,name,city,country,latitude,longitude&iata_code=not.is.null&order=id')
+      fetchAllRows('/rest/v1/airports?select=iata_code,icao_code,name,city,country,latitude,longitude&iata_code=not.is.null&order=icao_code')
     ]);
-    const airportCodeById = Object.fromEntries(airportRows.map(a => [a.id, a.iata_code]));
+    const airportCodeByIcao = Object.fromEntries(airportRows.map(a => [String(a.icao_code || '').toUpperCase(), a.iata_code]));
     window.supabaseAircraftNames = Object.fromEntries(aircraftRows.map(a => [a.id, a.name || a.model || a.icao_code || ""]));
 
     // Supabase is the single source of truth for every airport dot, coordinate,
@@ -16670,14 +16670,14 @@ function closeScheduleModal() {
       return {
         ...f,
         flight_type: resolvedFlightType,
-        origin: airportCodeById[r.origin_airport_id],
-        destination: airportCodeById[r.destination_airport_id]
+        origin: airportCodeByIcao[String(r.origin_airport_id || '').toUpperCase()],
+        destination: airportCodeByIcao[String(r.destination_airport_id || '').toUpperCase()]
       };
     }).filter(f => f.origin && f.destination);
 
     const unique = new Map();
     routeRows.forEach(r => {
-      const from = airportCodeById[r.origin_airport_id], to = airportCodeById[r.destination_airport_id];
+      const from = airportCodeByIcao[String(r.origin_airport_id || '').toUpperCase()], to = airportCodeByIcao[String(r.destination_airport_id || '').toUpperCase()];
       if (!from || !to || !airports[from] || !airports[to]) return;
       if ((from === 'TRD' && to === 'TOS') || (from === 'TOS' && to === 'TRD')) return;
       const key = [from, to].sort().join('-');
