@@ -16696,7 +16696,7 @@ function closeScheduleModal() {
   try {
     const [routeRows, flightRows, aircraftRows, airportRows, countryRows] = await Promise.all([
       fetchAllRows('/rest/v1/routes?select=id,origin_airport_id,destination_airport_id,flight_type,flight_time,active,airline_id&active=eq.true&order=id'),
-      fetchAllRows('/rest/v1/scheduled_flights?select=id,route_id,flight_number,aircraft_type_id,operator,flight_type,day_of_week,departure_cest,arrival%20CEST,operating_start_week,operating_end_week,active,via,airline_id&active=eq.true&order=id'),
+      fetchAllRows('/rest/v1/scheduled_flights?select=id,route_id,flight_number,aircraft_type_id,operator,flight_type,day_of_week,departure_cest,arrival_cest,operating_start_week,operating_end_week,active,via,airline_id&active=eq.true&order=id'),
       fetchAllRows('/rest/v1/aircraft_types?select=id,icao_code,name&order=id'),
       fetchAllRows('/rest/v1/airports?select=iata_code,icao_code,name,city,country_alpha3,latitude,longitude,timezone&iata_code=not.is.null&order=icao_code'),
       fetchAllRows('/rest/v1/countries?select=alpha3_code,country_name')
@@ -16737,8 +16737,8 @@ function closeScheduleModal() {
         // Convert the stored Europe/Paris reference-clock times to each airport's local clock.
         // Use a representative date in the current timetable season; calendar rendering
         // below can apply its selected date when date-specific conversion is available.
-        scheduled_departure: toAirportLocalTime(f.departure_cest, airportByIata[airportCodeByIcao[String(r.origin_airport_id || '').toUpperCase()]]?.timezone),
-        scheduled_arrival: toAirportLocalTime(f['arrival CEST'], airportByIata[airportCodeByIcao[String(r.destination_airport_id || '').toUpperCase()]]?.timezone),
+        scheduled_departure: f.departure_cest,
+        scheduled_arrival: f.arrival_cest,
         flight_type: resolvedFlightType,
         origin: airportCodeByIcao[String(r.origin_airport_id || '').toUpperCase()],
         destination: airportCodeByIcao[String(r.destination_airport_id || '').toUpperCase()]
