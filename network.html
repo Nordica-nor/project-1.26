@@ -903,6 +903,24 @@ rgba(255,255,255,.10);
     text-align: left !important;
 }
 
+#airport-name.route-title-main .route-flight-time {
+    margin-top: 4px !important;
+    color: rgba(255,255,255,.90) !important;
+    font-size: 14px !important;
+    font-weight: 400 !important;
+    line-height: 1.25 !important;
+    text-align: left !important;
+}
+
+.route-dst-note {
+    margin: 10px 0 2px;
+    color: rgba(255,255,255,.58);
+    font-size: 11px;
+    font-style: italic;
+    line-height: 1.4;
+    text-align: center;
+}
+
 #airport-name.route-title-main .route-via-label {
     margin-top: 4px !important;
     color: rgba(255,255,255,.72) !important;
@@ -3444,8 +3462,35 @@ function selectRoute(originCode, destinationCode) {
     const airportNameEl = document.getElementById("airport-name");
     airportNameEl.classList.add("route-title-main");
 
+    // Derive the route duration from the scheduled UTC times so the value stays
+    // database-driven and is independent of local DST offsets.
+    const routeFlightRows = (window.supabaseScheduleRows || []).filter(f =>
+        (f.origin === originCode && f.destination === destinationCode) ||
+        (f.origin === destinationCode && f.destination === originCode)
+    );
+    const parseClockMinutes = value => {
+        if (!value) return null;
+        const match = String(value).match(/^(\d{1,2}):(\d{2})/);
+        return match ? Number(match[1]) * 60 + Number(match[2]) : null;
+    };
+    let routeDurationMinutes = null;
+    for (const flight of routeFlightRows) {
+        const dep = parseClockMinutes(flight.dep_utc_win ?? flight.dep_utc_sum);
+        const arr = parseClockMinutes(flight.arr_utc_win ?? flight.arr_utc_sum);
+        if (dep === null || arr === null) continue;
+        let duration = (arr - dep + 1440) % 1440;
+        if (duration > 0) { routeDurationMinutes = duration; break; }
+    }
+    const routeFlightTimeText = routeDurationMinutes === null ? "" : (() => {
+        const hours = Math.floor(routeDurationMinutes / 60);
+        const minutes = routeDurationMinutes % 60;
+        if (hours && minutes) return `${hours} hours and ${String(minutes).padStart(2, "0")} minutes`;
+        if (hours) return `${hours} hours`;
+        return `${minutes} minutes`;
+    })();
+
     airportNameEl.innerHTML =
-        `${routeOriginCity} - ${routeDestinationCity}<div class="route-title-subtitle">${routeOriginName} (${originCode}) - ${routeDestinationName} (${destinationCode})</div>${isTosTrdThroughRoute ? `<div class="route-via-label">Via Bodø</div>` : ""}`;
+        `${routeOriginCity} - ${routeDestinationCity}<div class="route-title-subtitle">${routeOriginName} (${originCode}) - ${routeDestinationName} (${destinationCode})</div>${routeFlightTimeText ? `<div class="route-flight-time">${routeFlightTimeText}</div>` : ""}${isTosTrdThroughRoute ? `<div class="route-via-label">Via Bodø</div>` : ""}`;
 
     // Route pop-ups must not carry over the role/crew-base label
     // from the previously selected airport.
@@ -3589,6 +3634,7 @@ function getRouteOperatingMonthRange() {
     let routeHTML = startsInFuture
         ? `
             <div class="route-starts-april-message">${startsText}</div>
+            <div class="route-dst-note">Displayed departure and arrival time is local time, adjusted for regional DST practices</div>
             <div class="route-popup-comments" id="route-popup-comments"></div>
         `
         : `
@@ -3605,6 +3651,8 @@ function getRouteOperatingMonthRange() {
 
                 <div class="route-calendar-grid" id="route-calendar-grid"></div>
             </div>
+
+            <div class="route-dst-note">Displayed departure and arrival time is local time, adjusted for regional DST practices</div>
 
             ${isMixedFlightTypeRoute
                 ? `<div class="route-flight-type-legend">
@@ -3650,6 +3698,75 @@ function getRouteOperatingMonthRange() {
 
 }
 
+
+function scheduleDateKey(date) {
+    const d = date instanceof Date ? date : new Date(date);
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+}
+
+function parseScheduleTimeMinutes(value) {
+    if (value == null) return null;
+    const match = String(value).match(/(\d{1,2}):(\d{2})(?::(\d{2}))?/);
+    if (!match) return null;
+    return Number(match[1]) * 60 + Number(match[2]) + (Number(match[3] || 0) >= 30 ? 1 : 0);
+}
+
+function formatScheduleMinutes(minutes) {
+    const wrapped = ((Math.round(minutes) % 1440) + 1440) % 1440;
+    return `${String(Math.floor(wrapped / 60)).padStart(2,"0")}:${String(wrapped % 60).padStart(2,"0")}`;
+}
+
+function getSeasonForAirportDate(flightDate, winterStart, summerStart) {
+    const target = scheduleDateKey(flightDate);
+    const transitions = [];
+    if (winterStart && String(winterStart).slice(0,10) <= target) transitions.push({date:String(winterStart).slice(0,10), season:"win"});
+    if (summerStart && String(summerStart).slice(0,10) <= target) transitions.push({date:String(summerStart).slice(0,10), season:"sum"});
+    transitions.sort((a,b) => a.date.localeCompare(b.date));
+    if (transitions.length) return transitions[transitions.length - 1].season;
+    // Before the first recorded transition, infer the season from the next known transition.
+    if (winterStart && summerStart) return String(winterStart).slice(0,10) < String(summerStart).slice(0,10) ? "sum" : "win";
+    return null;
+}
+
+function calculateScheduledLocalTime(row, flightDate, kind) {
+    if (!row || !flightDate) return "";
+    const departureSeason = getSeasonForAirportDate(
+        flightDate, row.win_time_start_dep, row.sum_time_start_dep
+    );
+    // UTC schedule times must follow the route's active seasonal timetable,
+    // which switches when either endpoint enters its summer season. Local UTC
+    // offsets remain airport-specific, so a DST gap between the two airports
+    // is handled correctly in both directions.
+    const arrivalSeason = getSeasonForAirportDate(
+        flightDate, row.win_time_start_arr, row.sum_time_start_arr
+    );
+    const departure = kind === "dep";
+    const utcSeason = (departureSeason === "sum" || arrivalSeason === "sum")
+        ? "sum"
+        : (departureSeason === "win" || arrivalSeason === "win") ? "win" : null;
+    const localOffsetSeason = departure ? departureSeason : arrivalSeason;
+    const utcTime = departure
+        ? (utcSeason === "win" ? row.dep_utc_win : utcSeason === "sum" ? row.dep_utc_sum : null)
+        : (utcSeason === "win" ? row.arr_utc_win : utcSeason === "sum" ? row.arr_utc_sum : null);
+    const difference = departure
+        ? (localOffsetSeason === "win" ? row.dep_diff_utc_win : localOffsetSeason === "sum" ? row.dep_diff_utc_sum : null)
+        : (localOffsetSeason === "win" ? row.arr_diff_utc_win : localOffsetSeason === "sum" ? row.arr_diff_utc_sum : null);
+    const utcMinutes = parseScheduleTimeMinutes(utcTime);
+    const diffHours = Number(difference);
+    if (utcMinutes == null || difference == null || !Number.isFinite(diffHours)) {
+        const fallback = departure ? row.departure_local_nor : row.arrival_local_nor;
+        const fallbackMinutes = parseScheduleTimeMinutes(fallback);
+        return fallbackMinutes == null ? "" : formatScheduleMinutes(fallbackMinutes);
+    }
+    return formatScheduleMinutes(utcMinutes + diffHours * 60);
+}
+
+function getCalculatedFlightTimes(row, flightDate) {
+    return {
+        departure: calculateScheduledLocalTime(row, flightDate, "dep"),
+        arrival: calculateScheduledLocalTime(row, flightDate, "arr")
+    };
+}
 
 let activeAirportTab = "destinations";
 
@@ -3713,8 +3830,9 @@ function getAirportTodaySchedule(code, dayOffset = 0) {
             if ((originCode === "TOS" && destinationCode === "TRD") ||
                 (originCode === "TRD" && destinationCode === "TOS")) return;
 
-            const departureTime = parseDbTime(flight.departure_local_nor);
-            const arrivalTime = parseDbTime(flight.arrival_local_nor);
+            const calculatedTimes = getCalculatedFlightTimes(flight, date);
+            const departureTime = calculatedTimes.departure || parseDbTime(flight.departure_local_nor);
+            const arrivalTime = calculatedTimes.arrival || parseDbTime(flight.arrival_local_nor);
             const details = {
                 number: flight.flight_number || "",
                 aircraft: window.supabaseAircraftNames?.[flight.aircraft_type_id] || flight.aircraft_type || ""
@@ -15658,7 +15776,8 @@ function getScheduleDirectionData(direction) {
                 startWeek: row.operating_start_week,
                 endWeek: row.operating_end_week,
                 flightType: String(row.flight_type || "nordica").toLowerCase().includes("holidays") ? "holidays" : "nordica",
-                via: row.via || null
+                via: row.via || null,
+                scheduleRow: row
             });
         });
         Object.values(result).forEach(list => list.sort((a,b) => a.times[0].localeCompare(b.times[0])));
@@ -15766,7 +15885,15 @@ function getFlightsForDate(direction, year, month, day) {
 
     return (data[weekday] || []).filter(flight =>
         isScheduleActiveForDate(flight, date)
-    );
+    ).map(flight => {
+        if (!flight.scheduleRow) return flight;
+        const calculated = getCalculatedFlightTimes(flight.scheduleRow, date);
+        if (!calculated.departure && !calculated.arrival) return flight;
+        return {
+            ...flight,
+            times: [`${calculated.departure || "--:--"} - ${calculated.arrival || "--:--"}`]
+        };
+    });
 }
 
 function formatScheduleAircraft(aircraft) {
@@ -16632,12 +16759,14 @@ function closeScheduleModal() {
   }
 
   try {
-    const [routeRows, flightRows, aircraftRows, airportRows] = await Promise.all([
+    const [routeRows, flightRows, aircraftRows, airportRows, countryRows] = await Promise.all([
       fetchAllRows('/rest/v1/routes?select=id,origin_airport_id,destination_airport_id,flight_type,active,airline_id&active=eq.true&order=id'),
-      fetchAllRows('/rest/v1/scheduled_flights?select=id,route_id,flight_number,aircraft_type_id,operator,flight_type,day_of_week,departure_local_nor,arrival_local_nor,operating_start_week,operating_end_week,active,via,airline_id&active=eq.true&order=id'),
+      fetchAllRows('/rest/v1/scheduled_flights?select=id,route_id,flight_number,aircraft_type_id,operator,flight_type,day_of_week,departure_local_nor,arrival_local_nor,dep_utc_win,dep_utc_sum,arr_utc_win,arr_utc_sum,dep_diff_utc_win,dep_diff_utc_sum,arr_diff_utc_win,arr_diff_utc_sum,win_time_start_dep,sum_time_start_dep,win_time_start_arr,sum_time_start_arr,operating_start_week,operating_end_week,active,via,airline_id&active=eq.true&order=id'),
       fetchAllRows('/rest/v1/aircraft_types?select=id,icao_code,name&order=id'),
-      fetchAllRows('/rest/v1/airports?select=iata_code,icao_code,name,city,country_alpha3,latitude,longitude&iata_code=not.is.null&order=iata_code')
+      fetchAllRows('/rest/v1/airports?select=iata_code,icao_code,name,city,country_alpha3,latitude,longitude&iata_code=not.is.null&order=iata_code'),
+      fetchAllRows('/rest/v1/countries?select=alpha3_code,country_name&order=alpha3_code')
     ]);
+    const countryNameByAlpha3 = Object.fromEntries(countryRows.map(c => [c.alpha3_code, c.country_name]));
     const airportCodeById = Object.fromEntries(airportRows.map(a => [a.icao_code, a.iata_code]));
     window.supabaseAircraftNames = Object.fromEntries(aircraftRows.map(a => [a.id, a.name || a.model || a.icao_code || ""]));
 
@@ -16649,7 +16778,7 @@ function closeScheduleModal() {
         icao: a.icao_code || "",
         name: a.city || a.name || a.iata_code,
         city: a.city || a.name || a.iata_code,
-        country: a.country_alpha3 || "",
+        country: countryNameByAlpha3[a.country_alpha3] || a.country_alpha3 || "",
         lat: Number(a.latitude),
         lng: Number(a.longitude),
         hub: ["OSL", "BGO", "SVG", "TOS", "LPA"].includes(a.iata_code),
