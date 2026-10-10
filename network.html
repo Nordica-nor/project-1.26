@@ -16631,14 +16631,40 @@ function closeScheduleModal() {
     return all;
   }
 
+  function toAirportLocalTime(value, airportTimezone) {
+    if (!value) return null;
+    const match = String(value).match(/(\d{1,2}):(\d{2})(?::(\d{2}))?/);
+    if (!match) return value;
+    const hour = Number(match[1]), minute = Number(match[2]), second = Number(match[3] || 0);
+    // The stored timetable is expressed in Europe/Paris reference time. Convert
+    // that wall-clock time to an instant, then format it in the destination zone.
+    const referenceZone = 'Europe/Paris';
+    const date = new Date();
+    const parts = new Intl.DateTimeFormat('en-GB', {timeZone: referenceZone, year:'numeric', month:'2-digit', day:'2-digit'}).formatToParts(date);
+    const part = Object.fromEntries(parts.map(p => [p.type, p.value]));
+    const y=Number(part.year), mo=Number(part.month), d=Number(part.day);
+    const desired = {year:y, month:mo, day:d, hour, minute, second};
+    let guess = Date.UTC(y, mo-1, d, hour, minute, second);
+    for (let i=0;i<3;i++) {
+      const actual = Object.fromEntries(new Intl.DateTimeFormat('en-GB',{timeZone:referenceZone,year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit',hourCycle:'h23'}).formatToParts(new Date(guess)).map(p=>[p.type,p.value]));
+      const represented = Date.UTC(Number(actual.year),Number(actual.month)-1,Number(actual.day),Number(actual.hour),Number(actual.minute),Number(actual.second));
+      guess += Date.UTC(y,mo-1,d,hour,minute,second)-represented;
+    }
+    try { return new Intl.DateTimeFormat('en-GB',{timeZone:airportTimezone || referenceZone,hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).format(new Date(guess)); }
+    catch (_) { return String(value).slice(0,5); }
+  }
+
   try {
-    const [routeRows, flightRows, aircraftRows, airportRows] = await Promise.all([
+    const [routeRows, flightRows, aircraftRows, airportRows, countryRows] = await Promise.all([
       fetchAllRows('/rest/v1/routes?select=id,origin_airport_id,destination_airport_id,flight_type,active,airline_id&active=eq.true&order=id'),
-      fetchAllRows('/rest/v1/scheduled_flights?select=id,route_id,flight_number,aircraft_type_id,operator,flight_type,day_of_week,scheduled_departure,scheduled_arrival,operating_start_week,operating_end_week,active,via,airline_id&active=eq.true&order=id'),
+      fetchAllRows('/rest/v1/scheduled_flights?select=id,route_id,flight_number,aircraft_type_id,operator,flight_type,day_of_week,departure_cest,arrival%20CEST,operating_start_week,operating_end_week,active,via,airline_id&active=eq.true&order=id'),
       fetchAllRows('/rest/v1/aircraft_types?select=id,icao_code,name&order=id'),
-      fetchAllRows('/rest/v1/airports?select=iata_code,icao_code,name,city,latitude,longitude&iata_code=not.is.null&order=icao_code')
+      fetchAllRows('/rest/v1/airports?select=iata_code,icao_code,name,city,country_alpha3,latitude,longitude,timezone&iata_code=not.is.null&order=icao_code'),
+      fetchAllRows('/rest/v1/countries?select=alpha3_code,country_name')
     ]);
     const airportCodeByIcao = Object.fromEntries(airportRows.map(a => [String(a.icao_code || '').toUpperCase(), a.iata_code]));
+    const countryNameByCode = Object.fromEntries(countryRows.map(c => [String(c.alpha3_code || '').toUpperCase(), c.country_name]));
+    const airportByIata = Object.fromEntries(airportRows.map(a => [a.iata_code, a]));
     window.supabaseAircraftNames = Object.fromEntries(aircraftRows.map(a => [a.id, a.name || a.model || a.icao_code || ""]));
 
     // Supabase is the single source of truth for every airport dot, coordinate,
@@ -16649,7 +16675,7 @@ function closeScheduleModal() {
         icao: a.icao_code || "",
         name: a.city || a.name || a.iata_code,
         city: a.city || a.name || a.iata_code,
-        country: a.country || "",
+        country: countryNameByCode[String(a.country_alpha3 || '').toUpperCase()] || "",
         lat: Number(a.latitude),
         lng: Number(a.longitude),
         hub: ["OSL", "BGO", "SVG", "TOS", "LPA"].includes(a.iata_code),
@@ -16669,6 +16695,11 @@ function closeScheduleModal() {
       const resolvedFlightType = authoritativeType.includes("holidays") ? "holidays" : "nordica";
       return {
         ...f,
+        // Convert the stored Europe/Paris reference-clock times to each airport's local clock.
+        // Use a representative date in the current timetable season; calendar rendering
+        // below can apply its selected date when date-specific conversion is available.
+        scheduled_departure: toAirportLocalTime(f.departure_cest, airportByIata[airportCodeByIcao[String(r.origin_airport_id || '').toUpperCase()]]?.timezone),
+        scheduled_arrival: toAirportLocalTime(f['arrival CEST'], airportByIata[airportCodeByIcao[String(r.destination_airport_id || '').toUpperCase()]]?.timezone),
         flight_type: resolvedFlightType,
         origin: airportCodeByIcao[String(r.origin_airport_id || '').toUpperCase()],
         destination: airportCodeByIcao[String(r.destination_airport_id || '').toUpperCase()]
