@@ -838,7 +838,7 @@ rgba(255,255,255,.10);
     align-items: center;
     justify-content: center;
     gap: 8px;
-    margin: 10px auto 0;
+    margin-top: 10px;
     color: #ffffff;
     font-size: 18px;
     line-height: 1;
@@ -857,23 +857,13 @@ rgba(255,255,255,.10);
     object-fit: contain;
 }
 
-.route-local-time-note {
-    margin: 10px 12px 0;
-    color: rgba(255,255,255,.52);
-    font-size: 12px;
-    font-weight: 400;
-    line-height: 1.4;
-    text-align: center;
-}
-
 .route-popup-comments {
     margin-top: 8px;
-    text-align: center;
     color: rgba(255,255,255,.52);
     font-size: 13px;
     font-weight: 400;
     line-height: 1.35;
-    text-align: left;
+    text-align: center;
 }
 .route-starts-april-message {
     min-height: 280px;
@@ -1920,14 +1910,6 @@ rgba(255,255,255,.10);
         box-sizing: border-box;
         flex: 0 0 auto;
     }
-
-.route-local-time-note {
-    text-align: center;
-    font-size: 12px;
-    color: rgba(255,255,255,0.62);
-    margin: 10px 8px 4px;
-    line-height: 1.3;
-}
 
 .schedule-calendar-legend-item {
     display: inline-flex;
@@ -3300,24 +3282,6 @@ function addSupabaseAirportMarker(code, airport) {
     });
     marker.on("click", function(e) {
         L.DomEvent.stopPropagation(e);
-
-        // A second airport click while an airport is selected must open the
-        // route calendar whenever a route exists between the two airports.
-        // This takes precedence over the currently displayed route and prevents
-        // the old destinations panel from remaining visible.
-        if (selectedAirportCode && selectedAirportCode !== code) {
-            const routeFromSelectedAirport = routes.find(route =>
-                (route.from === selectedAirportCode && route.to === code) ||
-                (route.to === selectedAirportCode && route.from === code)
-            );
-            if (routeFromSelectedAirport) {
-                selectRoute(selectedAirportCode, code);
-                return;
-            }
-        }
-
-        // Clicking an endpoint of the currently displayed route returns to that
-        // airport's destinations, unless it formed a new route above.
         if (selectedRouteKey) {
             const currentRoute = routes.find(route =>
                 `${route.from}-${route.to}` === selectedRouteKey || `${route.to}-${route.from}` === selectedRouteKey
@@ -3327,8 +3291,13 @@ function addSupabaseAirportMarker(code, airport) {
                 return;
             }
         }
-
-        selectAirport(code);
+        if (selectedAirportCode && selectedAirportCode !== code && routes.some(route =>
+            (route.from === selectedAirportCode && route.to === code) || (route.to === selectedAirportCode && route.from === code)
+        )) {
+            selectRoute(selectedAirportCode, code);
+        } else {
+            selectAirport(code);
+        }
     });
 }
 
@@ -3392,12 +3361,8 @@ function selectRoute(originCode, destinationCode) {
     const panelSwitch = document.getElementById("panel-switch");
     if (panelSwitch) panelSwitch.style.display = "flex";
 
-    // Explicitly switch the panel out of airport/destinations mode before
-    // rendering the selected route's calendar.
     const airportTabs = document.getElementById("airport-tabs");
     if (airportTabs) airportTabs.style.display = "none";
-    const panelContent = document.getElementById("panel-content");
-    if (panelContent) panelContent.innerHTML = "";
     scheduleRouteFrom = originCode;
     scheduleRouteTo = destinationCode;
     updateFilterVisibility();
@@ -3460,11 +3425,6 @@ function selectRoute(originCode, destinationCode) {
         });
     });
 
-    const currentRoute = routes.find(r =>
-        (r.from === originCode && r.to === destinationCode) ||
-        (r.from === destinationCode && r.to === originCode)
-    );
-
     const routeOriginName = originCode === "LPA" ? "Gran Canaria" : origin.name;
     const routeDestinationName = destinationCode === "LPA" ? "Gran Canaria" : destination.name;
 
@@ -3485,7 +3445,7 @@ function selectRoute(originCode, destinationCode) {
     airportNameEl.classList.add("route-title-main");
 
     airportNameEl.innerHTML =
-        `${routeOriginCity} → ${routeDestinationCity}<div class="route-title-subtitle">${routeOriginName} (${originCode}) - ${routeDestinationName} (${destinationCode})</div>${currentRoute?.flightTime ? `<div class="route-popup-comments">Flight time: ${currentRoute.flightTime}</div>` : ""}${isTosTrdThroughRoute ? `<div class="route-via-label">Via Bodø</div>` : ""}`;
+        `${routeOriginCity} - ${routeDestinationCity}<div class="route-title-subtitle">${routeOriginName} (${originCode}) - ${routeDestinationName} (${destinationCode})</div>${isTosTrdThroughRoute ? `<div class="route-via-label">Via Bodø</div>` : ""}`;
 
     // Route pop-ups must not carry over the role/crew-base label
     // from the previously selected airport.
@@ -3506,6 +3466,10 @@ function selectRoute(originCode, destinationCode) {
         );
 
     const routeComments = [];
+    const currentRoute = routes.find(r =>
+        (r.from === originCode && r.to === destinationCode) ||
+        (r.from === destinationCode && r.to === originCode)
+    );
 
     const hasHolidaysFlights = routeHasHolidaysFlights(currentRoute);
     const hasRegularFlights = routeHasNordicaFlights(currentRoute);
@@ -3642,8 +3606,6 @@ function getRouteOperatingMonthRange() {
                 <div class="route-calendar-grid" id="route-calendar-grid"></div>
             </div>
 
-            <div class="route-local-time-note">*Displayed departure and arrival time is the local time.*</div>
-
             ${isMixedFlightTypeRoute
                 ? `<div class="route-flight-type-legend">
                      <span class="route-flight-type-legend-item">
@@ -3751,8 +3713,8 @@ function getAirportTodaySchedule(code, dayOffset = 0) {
             if ((originCode === "TOS" && destinationCode === "TRD") ||
                 (originCode === "TRD" && destinationCode === "TOS")) return;
 
-            const departureTime = parseDbTime(flight.scheduled_departure);
-            const arrivalTime = parseDbTime(flight.scheduled_arrival);
+            const departureTime = parseDbTime(flight.departure_local_nor);
+            const arrivalTime = parseDbTime(flight.arrival_local_nor);
             const details = {
                 number: flight.flight_number || "",
                 aircraft: window.supabaseAircraftNames?.[flight.aircraft_type_id] || flight.aircraft_type || ""
@@ -15687,8 +15649,8 @@ function getScheduleDirectionData(direction) {
         rows.forEach(row => {
             const day = scheduleWeekdayNames[Number(row.day_of_week) - 1];
             if (!day) return;
-            const dep = String(row.scheduled_departure || "").slice(0,5);
-            const arr = String(row.scheduled_arrival || "").slice(0,5);
+            const dep = String(row.departure_local_nor || "").slice(0,5);
+            const arr = String(row.arrival_local_nor || "").slice(0,5);
             const aircraft = window.supabaseAircraftNames?.[row.aircraft_type_id] || "";
             result[day].push({
                 times: [`${dep} - ${arr}`],
@@ -16459,7 +16421,6 @@ function renderScheduleDirection(direction) {
               : "";
       })()}
     </div>
-    <div class="route-local-time-note">*Displayed departure and arrival time is the local time.*</div>
     `;
 }
 
@@ -16670,40 +16631,14 @@ function closeScheduleModal() {
     return all;
   }
 
-  function toAirportLocalTime(value, airportTimezone) {
-    if (!value) return null;
-    const match = String(value).match(/(\d{1,2}):(\d{2})(?::(\d{2}))?/);
-    if (!match) return value;
-    const hour = Number(match[1]), minute = Number(match[2]), second = Number(match[3] || 0);
-    // The stored timetable is expressed in Europe/Paris reference time. Convert
-    // that wall-clock time to an instant, then format it in the destination zone.
-    const referenceZone = 'Europe/Paris';
-    const date = new Date();
-    const parts = new Intl.DateTimeFormat('en-GB', {timeZone: referenceZone, year:'numeric', month:'2-digit', day:'2-digit'}).formatToParts(date);
-    const part = Object.fromEntries(parts.map(p => [p.type, p.value]));
-    const y=Number(part.year), mo=Number(part.month), d=Number(part.day);
-    const desired = {year:y, month:mo, day:d, hour, minute, second};
-    let guess = Date.UTC(y, mo-1, d, hour, minute, second);
-    for (let i=0;i<3;i++) {
-      const actual = Object.fromEntries(new Intl.DateTimeFormat('en-GB',{timeZone:referenceZone,year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit',hourCycle:'h23'}).formatToParts(new Date(guess)).map(p=>[p.type,p.value]));
-      const represented = Date.UTC(Number(actual.year),Number(actual.month)-1,Number(actual.day),Number(actual.hour),Number(actual.minute),Number(actual.second));
-      guess += Date.UTC(y,mo-1,d,hour,minute,second)-represented;
-    }
-    try { return new Intl.DateTimeFormat('en-GB',{timeZone:airportTimezone || referenceZone,hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).format(new Date(guess)); }
-    catch (_) { return String(value).slice(0,5); }
-  }
-
   try {
-    const [routeRows, flightRows, aircraftRows, airportRows, countryRows] = await Promise.all([
-      fetchAllRows('/rest/v1/routes?select=id,origin_airport_id,destination_airport_id,flight_type,flight_time,active,airline_id&active=eq.true&order=id'),
-      fetchAllRows('/rest/v1/scheduled_flights?select=id,route_id,flight_number,aircraft_type_id,operator,flight_type,day_of_week,departure_cest,arrival_cest,operating_start_week,operating_end_week,active,via,airline_id&active=eq.true&order=id'),
+    const [routeRows, flightRows, aircraftRows, airportRows] = await Promise.all([
+      fetchAllRows('/rest/v1/routes?select=id,origin_airport_id,destination_airport_id,flight_type,active,airline_id&active=eq.true&order=id'),
+      fetchAllRows('/rest/v1/scheduled_flights?select=id,route_id,flight_number,aircraft_type_id,operator,flight_type,day_of_week,departure_local_nor,arrival_local_nor,operating_start_week,operating_end_week,active,via,airline_id&active=eq.true&order=id'),
       fetchAllRows('/rest/v1/aircraft_types?select=id,icao_code,name&order=id'),
-      fetchAllRows('/rest/v1/airports?select=iata_code,icao_code,name,city,country_alpha3,latitude,longitude,timezone&iata_code=not.is.null&order=icao_code'),
-      fetchAllRows('/rest/v1/countries?select=alpha3_code,country_name')
+      fetchAllRows('/rest/v1/airports?select=iata_code,icao_code,name,city,country_alpha3,latitude,longitude&iata_code=not.is.null&order=iata_code')
     ]);
-    const airportCodeByIcao = Object.fromEntries(airportRows.map(a => [String(a.icao_code || '').toUpperCase(), a.iata_code]));
-    const countryNameByCode = Object.fromEntries(countryRows.map(c => [String(c.alpha3_code || '').toUpperCase(), c.country_name]));
-    const airportByIata = Object.fromEntries(airportRows.map(a => [a.iata_code, a]));
+    const airportCodeById = Object.fromEntries(airportRows.map(a => [a.icao_code, a.iata_code]));
     window.supabaseAircraftNames = Object.fromEntries(aircraftRows.map(a => [a.id, a.name || a.model || a.icao_code || ""]));
 
     // Supabase is the single source of truth for every airport dot, coordinate,
@@ -16714,7 +16649,7 @@ function closeScheduleModal() {
         icao: a.icao_code || "",
         name: a.city || a.name || a.iata_code,
         city: a.city || a.name || a.iata_code,
-        country: countryNameByCode[String(a.country_alpha3 || '').toUpperCase()] || "",
+        country: a.country_alpha3 || "",
         lat: Number(a.latitude),
         lng: Number(a.longitude),
         hub: ["OSL", "BGO", "SVG", "TOS", "LPA"].includes(a.iata_code),
@@ -16734,20 +16669,15 @@ function closeScheduleModal() {
       const resolvedFlightType = authoritativeType.includes("holidays") ? "holidays" : "nordica";
       return {
         ...f,
-        // Convert the stored Europe/Paris reference-clock times to each airport's local clock.
-        // Use a representative date in the current timetable season; calendar rendering
-        // below can apply its selected date when date-specific conversion is available.
-        scheduled_departure: f.departure_cest,
-        scheduled_arrival: f.arrival_cest,
         flight_type: resolvedFlightType,
-        origin: airportCodeByIcao[String(r.origin_airport_id || '').toUpperCase()],
-        destination: airportCodeByIcao[String(r.destination_airport_id || '').toUpperCase()]
+        origin: airportCodeById[r.origin_airport_id],
+        destination: airportCodeById[r.destination_airport_id]
       };
     }).filter(f => f.origin && f.destination);
 
     const unique = new Map();
     routeRows.forEach(r => {
-      const from = airportCodeByIcao[String(r.origin_airport_id || '').toUpperCase()], to = airportCodeByIcao[String(r.destination_airport_id || '').toUpperCase()];
+      const from = airportCodeById[r.origin_airport_id], to = airportCodeById[r.destination_airport_id];
       if (!from || !to || !airports[from] || !airports[to]) return;
       if ((from === 'TRD' && to === 'TOS') || (from === 'TOS' && to === 'TRD')) return;
       const key = [from, to].sort().join('-');
@@ -16755,10 +16685,9 @@ function closeScheduleModal() {
       const hasHolidays = flights.some(f => String(f.flight_type || r.flight_type || '').toLowerCase() === 'holidays');
       const hasRegular = flights.some(f => String(f.flight_type || r.flight_type || '').toLowerCase() !== 'holidays');
       if (!unique.has(key)) {
-        unique.set(key, {from, to, flightTime: r.flight_time ? String(r.flight_time).slice(0,5) : '', flightType: hasHolidays && hasRegular ? 'Combined flight' : hasHolidays ? 'Holidays flight' : 'Regular flight', holidays: hasHolidays, type: hasHolidays && !hasRegular ? 'holidays' : 'regular', season: 'See timetable', hasNordicaFlights: hasRegular, hasHolidaysFlights: hasHolidays});
+        unique.set(key, {from, to, flightType: hasHolidays && hasRegular ? 'Combined flight' : hasHolidays ? 'Holidays flight' : 'Regular flight', holidays: hasHolidays, type: hasHolidays && !hasRegular ? 'holidays' : 'regular', season: 'See timetable', hasNordicaFlights: hasRegular, hasHolidaysFlights: hasHolidays});
       } else {
         const item = unique.get(key);
-        if (!item.flightTime && r.flight_time) item.flightTime = String(r.flight_time).slice(0,5);
         item.hasHolidaysFlights = item.hasHolidaysFlights || hasHolidays;
         item.hasNordicaFlights = item.hasNordicaFlights || hasRegular;
         item.holidays = item.hasHolidaysFlights;
