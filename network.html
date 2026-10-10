@@ -838,7 +838,7 @@ rgba(255,255,255,.10);
     align-items: center;
     justify-content: center;
     gap: 8px;
-    margin-top: 10px;
+    margin: 10px auto 0;
     color: #ffffff;
     font-size: 18px;
     line-height: 1;
@@ -857,13 +857,23 @@ rgba(255,255,255,.10);
     object-fit: contain;
 }
 
+.route-local-time-note {
+    margin: 10px 12px 0;
+    color: rgba(255,255,255,.52);
+    font-size: 12px;
+    font-weight: 400;
+    line-height: 1.4;
+    text-align: center;
+}
+
 .route-popup-comments {
     margin-top: 8px;
+    text-align: center;
     color: rgba(255,255,255,.52);
     font-size: 13px;
     font-weight: 400;
     line-height: 1.35;
-    text-align: center;
+    text-align: left;
 }
 .route-starts-april-message {
     min-height: 280px;
@@ -1910,6 +1920,14 @@ rgba(255,255,255,.10);
         box-sizing: border-box;
         flex: 0 0 auto;
     }
+
+.route-local-time-note {
+    text-align: center;
+    font-size: 12px;
+    color: rgba(255,255,255,0.62);
+    margin: 10px 8px 4px;
+    line-height: 1.3;
+}
 
 .schedule-calendar-legend-item {
     display: inline-flex;
@@ -3282,6 +3300,24 @@ function addSupabaseAirportMarker(code, airport) {
     });
     marker.on("click", function(e) {
         L.DomEvent.stopPropagation(e);
+
+        // A second airport click while an airport is selected must open the
+        // route calendar whenever a route exists between the two airports.
+        // This takes precedence over the currently displayed route and prevents
+        // the old destinations panel from remaining visible.
+        if (selectedAirportCode && selectedAirportCode !== code) {
+            const routeFromSelectedAirport = routes.find(route =>
+                (route.from === selectedAirportCode && route.to === code) ||
+                (route.to === selectedAirportCode && route.from === code)
+            );
+            if (routeFromSelectedAirport) {
+                selectRoute(selectedAirportCode, code);
+                return;
+            }
+        }
+
+        // Clicking an endpoint of the currently displayed route returns to that
+        // airport's destinations, unless it formed a new route above.
         if (selectedRouteKey) {
             const currentRoute = routes.find(route =>
                 `${route.from}-${route.to}` === selectedRouteKey || `${route.to}-${route.from}` === selectedRouteKey
@@ -3291,13 +3327,8 @@ function addSupabaseAirportMarker(code, airport) {
                 return;
             }
         }
-        if (selectedAirportCode && selectedAirportCode !== code && routes.some(route =>
-            (route.from === selectedAirportCode && route.to === code) || (route.to === selectedAirportCode && route.from === code)
-        )) {
-            selectRoute(selectedAirportCode, code);
-        } else {
-            selectAirport(code);
-        }
+
+        selectAirport(code);
     });
 }
 
@@ -3361,8 +3392,12 @@ function selectRoute(originCode, destinationCode) {
     const panelSwitch = document.getElementById("panel-switch");
     if (panelSwitch) panelSwitch.style.display = "flex";
 
+    // Explicitly switch the panel out of airport/destinations mode before
+    // rendering the selected route's calendar.
     const airportTabs = document.getElementById("airport-tabs");
     if (airportTabs) airportTabs.style.display = "none";
+    const panelContent = document.getElementById("panel-content");
+    if (panelContent) panelContent.innerHTML = "";
     scheduleRouteFrom = originCode;
     scheduleRouteTo = destinationCode;
     updateFilterVisibility();
@@ -3425,6 +3460,11 @@ function selectRoute(originCode, destinationCode) {
         });
     });
 
+    const currentRoute = routes.find(r =>
+        (r.from === originCode && r.to === destinationCode) ||
+        (r.from === destinationCode && r.to === originCode)
+    );
+
     const routeOriginName = originCode === "LPA" ? "Gran Canaria" : origin.name;
     const routeDestinationName = destinationCode === "LPA" ? "Gran Canaria" : destination.name;
 
@@ -3445,7 +3485,7 @@ function selectRoute(originCode, destinationCode) {
     airportNameEl.classList.add("route-title-main");
 
     airportNameEl.innerHTML =
-        `${routeOriginCity} - ${routeDestinationCity}<div class="route-title-subtitle">${routeOriginName} (${originCode}) - ${routeDestinationName} (${destinationCode})</div>${isTosTrdThroughRoute ? `<div class="route-via-label">Via Bodø</div>` : ""}`;
+        `${routeOriginCity} → ${routeDestinationCity}<div class="route-title-subtitle">${routeOriginName} (${originCode}) - ${routeDestinationName} (${destinationCode})</div>${currentRoute?.flightTime ? `<div class="route-popup-comments">Flight time: ${currentRoute.flightTime}</div>` : ""}${isTosTrdThroughRoute ? `<div class="route-via-label">Via Bodø</div>` : ""}`;
 
     // Route pop-ups must not carry over the role/crew-base label
     // from the previously selected airport.
@@ -3466,10 +3506,6 @@ function selectRoute(originCode, destinationCode) {
         );
 
     const routeComments = [];
-    const currentRoute = routes.find(r =>
-        (r.from === originCode && r.to === destinationCode) ||
-        (r.from === destinationCode && r.to === originCode)
-    );
 
     const hasHolidaysFlights = routeHasHolidaysFlights(currentRoute);
     const hasRegularFlights = routeHasNordicaFlights(currentRoute);
@@ -3605,6 +3641,8 @@ function getRouteOperatingMonthRange() {
 
                 <div class="route-calendar-grid" id="route-calendar-grid"></div>
             </div>
+
+            <div class="route-local-time-note">*Displayed departure and arrival time is the local time.*</div>
 
             ${isMixedFlightTypeRoute
                 ? `<div class="route-flight-type-legend">
@@ -16421,6 +16459,7 @@ function renderScheduleDirection(direction) {
               : "";
       })()}
     </div>
+    <div class="route-local-time-note">*Displayed departure and arrival time is the local time.*</div>
     `;
 }
 
@@ -16656,7 +16695,7 @@ function closeScheduleModal() {
 
   try {
     const [routeRows, flightRows, aircraftRows, airportRows, countryRows] = await Promise.all([
-      fetchAllRows('/rest/v1/routes?select=id,origin_airport_id,destination_airport_id,flight_type,active,airline_id&active=eq.true&order=id'),
+      fetchAllRows('/rest/v1/routes?select=id,origin_airport_id,destination_airport_id,flight_type,flight_time,active,airline_id&active=eq.true&order=id'),
       fetchAllRows('/rest/v1/scheduled_flights?select=id,route_id,flight_number,aircraft_type_id,operator,flight_type,day_of_week,departure_cest,arrival%20CEST,operating_start_week,operating_end_week,active,via,airline_id&active=eq.true&order=id'),
       fetchAllRows('/rest/v1/aircraft_types?select=id,icao_code,name&order=id'),
       fetchAllRows('/rest/v1/airports?select=iata_code,icao_code,name,city,country_alpha3,latitude,longitude,timezone&iata_code=not.is.null&order=icao_code'),
@@ -16716,9 +16755,10 @@ function closeScheduleModal() {
       const hasHolidays = flights.some(f => String(f.flight_type || r.flight_type || '').toLowerCase() === 'holidays');
       const hasRegular = flights.some(f => String(f.flight_type || r.flight_type || '').toLowerCase() !== 'holidays');
       if (!unique.has(key)) {
-        unique.set(key, {from, to, flightType: hasHolidays && hasRegular ? 'Combined flight' : hasHolidays ? 'Holidays flight' : 'Regular flight', holidays: hasHolidays, type: hasHolidays && !hasRegular ? 'holidays' : 'regular', season: 'See timetable', hasNordicaFlights: hasRegular, hasHolidaysFlights: hasHolidays});
+        unique.set(key, {from, to, flightTime: r.flight_time ? String(r.flight_time).slice(0,5) : '', flightType: hasHolidays && hasRegular ? 'Combined flight' : hasHolidays ? 'Holidays flight' : 'Regular flight', holidays: hasHolidays, type: hasHolidays && !hasRegular ? 'holidays' : 'regular', season: 'See timetable', hasNordicaFlights: hasRegular, hasHolidaysFlights: hasHolidays});
       } else {
         const item = unique.get(key);
+        if (!item.flightTime && r.flight_time) item.flightTime = String(r.flight_time).slice(0,5);
         item.hasHolidaysFlights = item.hasHolidaysFlights || hasHolidays;
         item.hasNordicaFlights = item.hasNordicaFlights || hasRegular;
         item.holidays = item.hasHolidaysFlights;
