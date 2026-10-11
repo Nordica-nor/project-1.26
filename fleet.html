@@ -921,15 +921,15 @@ function buildFleetDetails(aircraftTypes, aircraft) {
     const details = {};
 
     const typeGroups = new Map();
-    aircraftTypes.forEach(type => typeGroups.set(Number(type.id), {
+    aircraftTypes.forEach(type => typeGroups.set(type.icao_code, {
         type,
-        aircraft: aircraft.filter(a => Number(a.aircraft_type_id) === Number(type.id))
+        aircraft: aircraft.filter(a => a.aircraft_type_id === type.icao_code)
     }));
 
     const groupByNames = (names) => {
         return aircraftTypes
             .filter(t => names.includes(t.name))
-            .flatMap(t => typeGroups.get(Number(t.id))?.aircraft || []);
+            .flatMap(t => typeGroups.get(t.icao_code)?.aircraft || []);
     };
 
     const crjAircraft = groupByNames(["Bombardier CRJ700", "Bombardier CRJ900"]);
@@ -944,7 +944,7 @@ function buildFleetDetails(aircraftTypes, aircraft) {
             .map(a => ({
                 reg: a.registration,
                 seat: a.configuration || "—",
-                icao: types.find(t => Number(t.id) === Number(a.aircraft_type_id))?.icao_code || "—",
+                icao: types.find(t => t.icao_code === a.aircraft_type_id)?.icao_code || "—",
                 status: a.status === "Parked" ? "Parked" : "Active",
                 livery: displayLivery(a.livery_brand)
             })),
@@ -953,7 +953,7 @@ function buildFleetDetails(aircraftTypes, aircraft) {
             .map(a => ({
                 reg: a.registration,
                 seat: a.configuration || "—",
-                icao: types.find(t => Number(t.id) === Number(a.aircraft_type_id))?.icao_code || "—",
+                icao: types.find(t => t.icao_code === a.aircraft_type_id)?.icao_code || "—",
                 status: "On order",
                 livery: displayLivery(a.livery_brand)
             }))
@@ -964,7 +964,7 @@ function buildFleetDetails(aircraftTypes, aircraft) {
     }
 
     aircraftTypes.forEach(type => {
-        const rows = typeGroups.get(Number(type.id))?.aircraft || [];
+        const rows = typeGroups.get(type.icao_code)?.aircraft || [];
         const key = type.name === "Airbus A220-300"
             ? "a220"
             : type.name === "Boeing 737-8 MAX"
@@ -1062,7 +1062,7 @@ async function loadFleetData() {
         ["Bombardier CRJ700", "Bombardier CRJ900"].includes(t.name)
     );
     const crjAircraft = aircraft.filter(a =>
-        crjTypes.some(t => Number(t.id) === Number(a.aircraft_type_id))
+        crjTypes.some(t => t.icao_code === a.aircraft_type_id)
     );
 
     if (articleByType.has("crj")) {
@@ -1082,7 +1082,7 @@ async function loadFleetData() {
         updateFleetCard(
             articleByType.get(key),
             [type],
-            aircraft.filter(a => Number(a.aircraft_type_id) === Number(type.id))
+            aircraft.filter(a => a.aircraft_type_id === type.icao_code)
         );
     });
 
