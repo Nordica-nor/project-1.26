@@ -16789,13 +16789,15 @@ function closeScheduleModal() {
     const routeById = Object.fromEntries(routeRows.map(r => [r.id, r]));
     window.supabaseScheduleRows = flightRows.map(f => {
       const r = routeById[f.route_id] || {};
-      // The routes table's flight_type is the authoritative source for
-      // calendar dot colour. Do not let a blank or conflicting scheduled_flights
-      // value override the route classification.
-      const routeType = String(r.flight_type || "").trim().toLowerCase();
+      // Nordica vs Holidays is a FLIGHT-level classification, not a route-level
+      // classification. Mixed routes can contain both regular and Holidays
+      // services, so prefer scheduled_flights.flight_type for each individual
+      // flight and use routes.flight_type only as a fallback for older/incomplete
+      // schedule rows.
       const flightType = String(f.flight_type || "").trim().toLowerCase();
-      const authoritativeType = routeType || flightType;
-      const resolvedFlightType = authoritativeType.includes("holidays") ? "holidays" : "nordica";
+      const routeType = String(r.flight_type || "").trim().toLowerCase();
+      const resolvedType = flightType || routeType;
+      const resolvedFlightType = resolvedType.includes("holidays") ? "holidays" : "nordica";
       return {
         ...f,
         flight_type: resolvedFlightType,
