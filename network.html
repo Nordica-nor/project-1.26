@@ -16778,7 +16778,7 @@ function closeScheduleModal() {
 
   try {
     const [routeRows, flightRows, aircraftRows, airportRows, countryRows] = await Promise.all([
-      fetchAllRows('/rest/v1/routes?select=id,origin_airport_id,destination_airport_id,flight_type,active,airline_id&active=eq.true&order=id'),
+      fetchAllRows('/rest/v1/routes_BNN?select=id,origin_airport_id,destination_airport_id,flight_type,active,airline_id&active=eq.true&order=id'),
       fetchAllRows('/rest/v1/scheduled_flights?select=id,route_id,flight_number,aircraft_type_id,operator,flight_type,day_of_week,departure_local_nor,arrival_local_nor,dep_utc_win,dep_utc_sum,arr_utc_win,arr_utc_sum,dep_diff_utc_win,dep_diff_utc_sum,arr_diff_utc_win,arr_diff_utc_sum,win_time_start_dep,sum_time_start_dep,win_time_start_arr,sum_time_start_arr,operating_start_week,operating_end_week,active,via,airline_id&active=eq.true&order=id'),
       fetchAllRows('/rest/v1/aircraft_types?select=icao_code,name&order=icao_code'),
       fetchAllRows('/rest/v1/airports?select=iata_code,icao_code,name,city,country_alpha3,latitude,longitude,timezone&iata_code=not.is.null&order=iata_code'),
