@@ -741,17 +741,7 @@ rgba(255,255,255,.10);
     position: relative;
 }
 
-.airport-marker.special-base::after {
-    content: "";
-    position: absolute;
-    width: 4px;
-    height: 4px;
-    left: 50%;
-    top: 50%;
-    transform: translate(-50%, -50%);
-    border-radius: 50%;
-    background: #d62828;
-}
+/* Hub/base markers use the same solid dot as every other airport. */
 
 
 .via-bodo {
@@ -4238,23 +4228,25 @@ function renderAirportDestinations(code) {
         route.from === code || route.to === code
     );
 
-    const destinationEntries = connectedRoutes.map(route => {
-
-        const destinationCode =
-            route.from === code ? route.to : route.from;
-
+    const destinationEntries = connectedRoutes.flatMap(route => {
+        const destinationCode = route.from === code ? route.to : route.from;
         const destination = airports[destinationCode];
-
-        const hasHolidaysFlights = routeHasHolidaysFlights(route);
-        const hasRegularFlights = routeHasNordicaFlights(route);
-
-        return {
+        if (!destination) return [];
+        const operators = Array.isArray(route.operators) && route.operators.length
+            ? route.operators
+            : [
+                ...(route.hasASR ? ["Adriatica"] : []),
+                ...(route.hasHolidaysFlights ? ["Holidays"] : []),
+                ...(route.hasNordicaFlights || (!route.hasHolidaysFlights && !route.hasASR) ? ["Nordica"] : [])
+              ];
+        return [...new Set(operators)].map(operator => ({
             code: destinationCode,
             airport: destination,
-            holidays: route.holidays || false,
-            mixed: hasHolidaysFlights && hasRegularFlights,
+            operator,
+            holidays: operator === "Holidays",
+            mixed: operators.length > 1,
             domestic: destination.country === airport.country
-        };
+        }));
     });
 
     /*
@@ -4345,15 +4337,15 @@ function renderAirportDestinations(code) {
     };
 
     const domestic = destinationEntries
-        .filter(entry => entry.domestic && (!entry.holidays || entry.mixed))
+        .filter(entry => entry.domestic && entry.operator !== "Holidays")
         .sort(destinationSort);
 
     const international = destinationEntries
-        .filter(entry => !entry.domestic && (!entry.holidays || entry.mixed))
+        .filter(entry => !entry.domestic && (code === "OSL" || entry.operator !== "Holidays"))
         .sort(destinationSort);
 
     const holidays = destinationEntries
-        .filter(entry => entry.holidays && !entry.mixed)
+        .filter(entry => code !== "OSL" && !entry.domestic && entry.operator === "Holidays")
         .sort(destinationSort);
 
     /*
@@ -4381,16 +4373,7 @@ function renderAirportDestinations(code) {
                     </div>
 
                     <div class="aircraft">
-                        ${
-                            ((code === "TOS" && entry.code === "TRD") ||
-                             (code === "TRD" && entry.code === "TOS"))
-                                ? "Via Bodø"
-                                : entry.holidays
-                                    ? "Holidays"
-                                    : entry.mixed
-                                        ? "Direct · Holidays"
-                                        : "Direct"
-                        }
+                        ${entry.operator}
                     </div>
                 </div>
             `;
@@ -4422,16 +4405,7 @@ function renderAirportDestinations(code) {
                     </div>
 
                     <div class="aircraft">
-                        ${
-                            ((code === "TOS" && entry.code === "TRD") ||
-                             (code === "TRD" && entry.code === "TOS"))
-                                ? "Via Bodø"
-                                : entry.holidays
-                                    ? "Holidays"
-                                    : entry.mixed
-                                        ? "Direct · Holidays"
-                                        : "Direct"
-                        }
+                        ${entry.operator}
                     </div>
                 </div>
             `;
@@ -16682,23 +16656,33 @@ function closeScheduleModal() {
       if ((from === 'TRD' && to === 'TOS') || (from === 'TOS' && to === 'TRD')) return;
       const key = [from, to].sort().join('-');
       const flights = source === 'bnn' ? window.supabaseScheduleRows.filter(f => f.route_id === r.id) : [];
-      const hasHolidays = flights.some(f => String(f.flight_type || r.flight_type || '').toLowerCase() === 'holidays');
-      const hasRegular = source === 'bnn' && flights.some(f => String(f.flight_type || r.flight_type || '').toLowerCase() !== 'holidays');
-      if (!unique.has(key)) unique.set(key, {from, to, hasBNN:false, hasASR:false, flightType:'Regular flight', holidays:false, type:'regular', season:'See timetable', hasNordicaFlights:false, hasHolidaysFlights:false});
+      const routeType = String(r.flight_type || '').trim().toLowerCase();
+      const scheduleTypes = flights.map(f => String(f.flight_type || '').trim().toLowerCase()).filter(Boolean);
+      const types = [...new Set([routeType, ...scheduleTypes].filter(Boolean))];
+      const hasHolidays = types.some(t => t.includes('holidays'));
+      const hasAdriatica = source === 'asr' || types.some(t => t.includes('adriatica'));
+      const hasRegular = source === 'bnn' && (types.some(t => !t.includes('holidays') && !t.includes('adriatica')) || (!types.length));
+      if (!unique.has(key)) unique.set(key, {from, to, hasBNN:false, hasASR:false, flightType:'Regular flight', holidays:false, type:'regular', season:'See timetable', hasNordicaFlights:false, hasHolidaysFlights:false, operators:[]});
       const item = unique.get(key);
       if (source === 'bnn') {
         item.hasBNN = true;
         item.hasHolidaysFlights = item.hasHolidaysFlights || hasHolidays;
         item.hasNordicaFlights = item.hasNordicaFlights || hasRegular;
+        if (hasHolidays) item.operators.push('Holidays');
+        if (hasRegular) item.operators.push('Nordica');
         item.holidays = item.hasHolidaysFlights;
         item.flightType = item.hasHolidaysFlights && item.hasNordicaFlights ? 'Combined flight' : item.hasHolidaysFlights ? 'Holidays flight' : 'Regular flight';
         item.type = item.hasHolidaysFlights && !item.hasNordicaFlights ? 'holidays' : 'regular';
-      } else item.hasASR = true;
+      }
+      if (source === 'asr' || hasAdriatica) {
+        item.hasASR = true;
+        item.operators.push('Adriatica');
+      }
     }
     routeRows.forEach(r => addRouteSource(r, 'bnn'));
     adriaticaRouteRows.forEach(r => addRouteSource(r, 'asr'));
 
-    routes = Array.from(unique.values());
+    routes = Array.from(unique.values()).map(route => ({ ...route, operators: [...new Set(route.operators || [])] }));
     // Replace the initially rendered legacy lines with lines from the live database.
     routeLayers.forEach(line => { try { map.removeLayer(line); } catch (_) {} });
     routeLayers.length = 0;
