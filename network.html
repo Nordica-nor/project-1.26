@@ -654,89 +654,19 @@ rgba(255,255,255,.10);
 
 
 #network-filters {
-    position: absolute;
-    z-index: 1100;
-    top: 94px;
-    right: 18px;
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    gap: 5px;
-    width: auto;
+    position: absolute; z-index: 1100; top: 94px; right: 18px;
+    display: flex; flex-direction: column; align-items: flex-start; gap: 7px;
+    min-width: 176px; padding: 11px 13px; border: 1px solid rgba(255,255,255,0.18);
+    border-radius: 7px; background: rgba(8,22,39,0.96); box-shadow: 0 5px 18px rgba(0,0,0,0.28);
+    color: #fff; font-family: Arial, Helvetica, sans-serif;
 }
-
-.filter-title {
-    margin: 0 4px 0 0;
-    color: rgba(255,255,255,0.70);
-    font-family: Arial, Helvetica, sans-serif;
-    font-size: 10px;
-    font-weight: 600;
-    letter-spacing: 0.25px;
-    white-space: nowrap;
-}
-
-.filter-button {
-    appearance: none;
-    width: auto;
-    min-width: 66px;
-    padding: 5px 9px;
-    border: 1px solid #4671b8;
-    border-radius: 5px;
-    background: #4671b8;
-    color: #fff;
-    font-family: Arial, Helvetica, sans-serif;
-    font-size: 10px;
-    font-weight: 600;
-    letter-spacing: 0.15px;
-    text-align: center;
-    cursor: pointer;
-    box-shadow: none;
-    transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease, opacity 0.18s ease;
-}
-
-.filter-button:hover {
-    background: #5a83c4;
-    border-color: #5a83c4;
-}
-
-.filter-button:active {
-    background: #365f9f;
-}
-
-.filter-button.active {
-    background: #1d2f4b;
-    border-color: #4671b8;
-    color: #fff;
-}
-
-.filter-button.active:hover {
-    background: #263e65;
-    border-color: #5a83c4;
-}
-
-.filter-button:focus-visible {
-    outline: none;
-    box-shadow: 0 0 0 2px rgba(70,113,184,0.28);
-}
-
+.filter-title { margin: 0 0 1px; color: rgba(255,255,255,0.88); font-size: 12px; font-weight: 700; white-space: nowrap; }
+.filter-option { display: flex; align-items: center; gap: 8px; color: #f3f6fa; font-size: 12px; line-height: 1.35; white-space: nowrap; cursor: pointer; }
+.filter-option input { width: 14px; height: 14px; margin: 0; accent-color: #4671b8; cursor: pointer; }
 @media (max-width: 600px) {
-    #network-filters {
-        top: 78px;
-        right: 10px;
-        gap: 4px;
-    }
-
-    .filter-title {
-        font-size: 9px;
-    }
-
-    .filter-button {
-        min-width: 58px;
-        padding: 5px 7px;
-        font-size: 9px;
-    }
+  #network-filters { top: 78px; right: 10px; min-width: 158px; padding: 9px 10px; gap: 6px; }
+  .filter-title, .filter-option { font-size: 11px; }
 }
-
 
 .frequency-value {
     white-space: nowrap;
@@ -2350,9 +2280,10 @@ rgba(255,255,255,.10);
 
 <div id="map"></div>
 
-<div id="network-filters" aria-label="Route filters">
-    <div class="filter-title">Route filters:</div>
-    <button type="button" class="filter-button" data-filter="holidays">Holidays</button>
+<div id="network-filters" aria-label="Route filtering">
+    <div class="filter-title">Route filtering:</div>
+    <label class="filter-option"><input type="checkbox" class="route-source-filter" data-filter="nordica" checked> Nordica &amp; Holidays</label>
+    <label class="filter-option"><input type="checkbox" class="route-source-filter" data-filter="adriatica" checked> Adriatica</label>
 </div>
 
 
@@ -2966,12 +2897,11 @@ const map = L.map("map", {
 }).setView([55, 10], 4);
 
 /*
-   CARTO Dark Matter, label-free basemap.
-   CARTO Dark Matter without labels is used here deliberately:
-   no API key, no vector-style dependency, no MapLibre dependency.
+   CARTO Positron, label-free light basemap.
+   Keep the same tile-layer setup and attribution; only the map style changes.
 */
 L.tileLayer(
-    "https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png?key=cb1_2iwu_1_adb61a81e14a92adac6dcc13",
+    "https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png?key=cb1_2iwu_1_adb61a81e14a92adac6dcc13",
     {
         subdomains: "abcd",
         maxZoom: 20,
@@ -3370,9 +3300,9 @@ function selectRoute(originCode, destinationCode) {
         activeFilters[key] = false;
     });
 
-    document.querySelectorAll(".filter-button").forEach(button => {
-        button.classList.remove("active");
-    });
+    activeFilters.nordica = true;
+    activeFilters.adriatica = true;
+    document.querySelectorAll(".route-source-filter").forEach(input => { input.checked = true; });
 
     selectedRouteKey = `${route.from}-${route.to}`;
 
@@ -4573,10 +4503,7 @@ document.addEventListener("click", event => {
    NETWORK FILTERS
    ========================================================== */
 
-const activeFilters = {
-    holidays: false,
-    nordica: false
-};
+const activeFilters = { nordica: true, adriatica: true };
 
 function getRouteSchedule(route) {
     if (!route) return null;
@@ -4669,75 +4596,14 @@ function routeHasNordicaFlights(route) {
 }
 
 function routePassesFilters(route) {
-    // No filter selected: show the complete network.
-    if (!activeFilters.holidays && !activeFilters.nordica) {
-        return true;
-    }
-
-    // A filter is exclusive: only routes operated by the selected airline
-    // are visible. A route with both airline operations is visible under
-    // either corresponding filter.
-    if (activeFilters.holidays) {
-        return routeHasHolidaysFlights(route);
-    }
-
-    if (activeFilters.nordica) {
-        return routeHasNordicaFlights(route);
-    }
-
-    return true;
+    if (!route) return false;
+    return (activeFilters.nordica && route.hasBNN === true) ||
+           (activeFilters.adriatica && route.hasASR === true);
 }
 
 function updateFilterVisibility() {
     const filters = document.getElementById("network-filters");
-    if (!filters) return;
-
-    // Filter buttons are hidden during a specific two-airport route view.
-    if (selectedRouteKey) {
-        filters.style.display = "none";
-        return;
-    }
-
-    filters.style.display = "flex";
-
-    // Determine which categories are actually represented in the current view.
-    let visibleRoutes = routes;
-
-    if (selectedAirportCode) {
-        visibleRoutes = routes.filter(route =>
-            route.from === selectedAirportCode ||
-            route.to === selectedAirportCode
-        );
-    }
-
-    const availableCategories = new Set();
-
-    visibleRoutes.forEach(route => {
-        if (routeHasHolidaysFlights(route)) {
-            availableCategories.add("holidays");
-        }
-
-        if (routeHasNordicaFlights(route)) {
-            availableCategories.add("nordica");
-        }
-    });
-
-    document.querySelectorAll(".filter-button").forEach(button => {
-        const category = button.dataset.filter;
-        const available = availableCategories.has(category);
-
-        button.style.display = available ? "" : "none";
-
-        // If a currently active filter is no longer relevant in the new view,
-        // turn it off.
-        if (!available && activeFilters[category]) {
-            activeFilters[category] = false;
-            button.classList.remove("active");
-        }
-    });
-
-    // If there are no active filters after the visibility update, the full
-    // applicable network is displayed.
+    if (filters) filters.style.display = selectedRouteKey ? "none" : "flex";
     applyNetworkFilters();
 }
 
@@ -4824,15 +4690,11 @@ function applyNetworkFilters() {
         // visible. With no filter selected, the complete airport network
         // remains visible. Route lines stay hidden until an airport or a
         // specific route is selected.
-        if (activeFilters.holidays || activeFilters.nordica) {
-            routes.forEach(route => {
-                if (!routePassesFilters(route)) return;
-                visibleAirports.add(route.from);
-                visibleAirports.add(route.to);
-            });
-        } else {
-            Object.keys(airports).forEach(code => visibleAirports.add(code));
-        }
+        routes.forEach(route => {
+            if (!routePassesFilters(route)) return;
+            visibleAirports.add(route.from);
+            visibleAirports.add(route.to);
+        });
     }
 
     Object.keys(airports).forEach(code => {
@@ -4850,29 +4712,14 @@ function applyNetworkFilters() {
     });
 }
 
-document.querySelectorAll(".filter-button").forEach(button => {
-    button.addEventListener("click", function(e) {
+document.querySelectorAll(".route-source-filter").forEach(input => {
+    input.addEventListener("change", function(e) {
         e.stopPropagation();
-
-        const filter = this.dataset.filter;
-        const wasActive = activeFilters[filter];
-
-        // Clicking the active filter turns filtering off and restores all
-        // airlines. Clicking the other filter switches directly to it.
-        activeFilters.holidays = false;
-        activeFilters.nordica = false;
-
-        if (!wasActive) {
-            activeFilters[filter] = true;
-        }
-
-        document.querySelectorAll(".filter-button").forEach(btn => {
-            btn.classList.toggle("active", !!activeFilters[btn.dataset.filter]);
-        });
-
+        activeFilters[this.dataset.filter] = this.checked;
         updateFilterVisibility();
     });
 });
+
 
 function resetMap() {
 
@@ -16777,8 +16624,9 @@ function closeScheduleModal() {
   }
 
   try {
-    const [routeRows, flightRows, aircraftRows, airportRows, countryRows] = await Promise.all([
+    const [routeRows, adriaticaRouteRows, flightRows, aircraftRows, airportRows, countryRows] = await Promise.all([
       fetchAllRows('/rest/v1/routes_BNN?select=id,origin_airport_id,destination_airport_id,flight_type,active,airline_id&active=eq.true&order=id'),
+      fetchAllRows('/rest/v1/routes_ASR?select=id,origin_airport_id,destination_airport_id,flight_type,active,airline_id&active=eq.true&order=id'),
       fetchAllRows('/rest/v1/scheduled_flights?select=id,route_id,flight_number,aircraft_type_id,operator,flight_type,day_of_week,departure_local_nor,arrival_local_nor,dep_utc_win,dep_utc_sum,arr_utc_win,arr_utc_sum,dep_diff_utc_win,dep_diff_utc_sum,arr_diff_utc_win,arr_diff_utc_sum,win_time_start_dep,sum_time_start_dep,win_time_start_arr,sum_time_start_arr,operating_start_week,operating_end_week,active,via,airline_id&active=eq.true&order=id'),
       fetchAllRows('/rest/v1/aircraft_types?select=icao_code,name&order=icao_code'),
       fetchAllRows('/rest/v1/airports?select=iata_code,icao_code,name,city,country_alpha3,latitude,longitude,timezone&iata_code=not.is.null&order=iata_code'),
@@ -16828,25 +16676,27 @@ function closeScheduleModal() {
     }).filter(f => f.origin && f.destination);
 
     const unique = new Map();
-    routeRows.forEach(r => {
+    function addRouteSource(r, source) {
       const from = airportCodeById[r.origin_airport_id], to = airportCodeById[r.destination_airport_id];
       if (!from || !to || !airports[from] || !airports[to]) return;
       if ((from === 'TRD' && to === 'TOS') || (from === 'TOS' && to === 'TRD')) return;
       const key = [from, to].sort().join('-');
-      const flights = window.supabaseScheduleRows.filter(f => f.route_id === r.id);
+      const flights = source === 'bnn' ? window.supabaseScheduleRows.filter(f => f.route_id === r.id) : [];
       const hasHolidays = flights.some(f => String(f.flight_type || r.flight_type || '').toLowerCase() === 'holidays');
-      const hasRegular = flights.some(f => String(f.flight_type || r.flight_type || '').toLowerCase() !== 'holidays');
-      if (!unique.has(key)) {
-        unique.set(key, {from, to, flightType: hasHolidays && hasRegular ? 'Combined flight' : hasHolidays ? 'Holidays flight' : 'Regular flight', holidays: hasHolidays, type: hasHolidays && !hasRegular ? 'holidays' : 'regular', season: 'See timetable', hasNordicaFlights: hasRegular, hasHolidaysFlights: hasHolidays});
-      } else {
-        const item = unique.get(key);
+      const hasRegular = source === 'bnn' && flights.some(f => String(f.flight_type || r.flight_type || '').toLowerCase() !== 'holidays');
+      if (!unique.has(key)) unique.set(key, {from, to, hasBNN:false, hasASR:false, flightType:'Regular flight', holidays:false, type:'regular', season:'See timetable', hasNordicaFlights:false, hasHolidaysFlights:false});
+      const item = unique.get(key);
+      if (source === 'bnn') {
+        item.hasBNN = true;
         item.hasHolidaysFlights = item.hasHolidaysFlights || hasHolidays;
         item.hasNordicaFlights = item.hasNordicaFlights || hasRegular;
         item.holidays = item.hasHolidaysFlights;
         item.flightType = item.hasHolidaysFlights && item.hasNordicaFlights ? 'Combined flight' : item.hasHolidaysFlights ? 'Holidays flight' : 'Regular flight';
         item.type = item.hasHolidaysFlights && !item.hasNordicaFlights ? 'holidays' : 'regular';
-      }
-    });
+      } else item.hasASR = true;
+    }
+    routeRows.forEach(r => addRouteSource(r, 'bnn'));
+    adriaticaRouteRows.forEach(r => addRouteSource(r, 'asr'));
 
     routes = Array.from(unique.values());
     // Replace the initially rendered legacy lines with lines from the live database.
@@ -16860,7 +16710,7 @@ function closeScheduleModal() {
       routeLayers.push(line);
     });
     if (typeof applyNetworkFilters === 'function') applyNetworkFilters();
-    console.info(`Loaded ${routes.length} route pairs and ${window.supabaseScheduleRows.length} scheduled flights from Supabase.`);
+    console.info(`Loaded ${routes.length} route pairs from routes_BNN and routes_ASR, plus ${window.supabaseScheduleRows.length} scheduled flights.`);
   } catch (error) {
     console.error('Could not load the live Supabase schedule; the embedded fallback remains active.', error);
     const note = document.createElement('div');
